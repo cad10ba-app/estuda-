@@ -32,9 +32,9 @@ Validar documentação, entrevistas com 5–10 alunos por nível, protótipo Fig
 - **App nativo** (Capacitor sobre o mesmo web app, ou Expo reutilizando `engine`/`core`) se lembretes locais ou lojas forem necessários.
 
 ## Backlog inicial (ordem sugerida)
-1. Setup do monorepo (Vite + React + TS PWA, Vitest, CI). *(monorepo e `packages/engine` já criados)*
-2. `packages/engine`: pontuação de prioridade + alocação em janelas (com testes) — REQ-006.
-3. `packages/core` (portas `Repository`/`Notifier`/`Clock`) e `packages/data` (Dexie) — `06`, `07`.
+1. Setup do monorepo (Vite + React + TS PWA, Vitest, CI). ✅
+2. `packages/engine`: pontuação de prioridade + alocação em janelas (com testes) — REQ-006. ✅
+3. `packages/core` (portas `Repository`/`Notifier`/`Clock`) e `packages/data` (Dexie) — `06`, `07`. ✅ (esqueleto: `StudyStore`, `planWeek`, `DexieStore`, tela Hoje, .ics)
 4. Onboarding + perfil por nível — REQ-001.
 5. CRUD disciplinas/tópicos/prazos — REQ-002–004.
 6. Tela Plano + edição/travamento — REQ-005, 008.
