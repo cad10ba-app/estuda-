@@ -52,6 +52,12 @@ export class MemoryStore implements StudyStore {
   async listReferences() { return [...this.refs.values()]; }
   async saveReference(r: Reference) { this.refs.set(r.id, r); }
   async deleteReference(id: string) { this.refs.delete(id); }
+  async clearAll() {
+    this.profile = undefined;
+    this.subjects.clear(); this.deadlines.clear(); this.windows = []; this.plan = []; this.sessions = [];
+    this.cards.clear(); this.topics.clear(); this.reviews.clear();
+    this.projects.clear(); this.milestones.clear(); this.logs.clear(); this.refs.clear();
+  }
   async listPlan() { return [...this.plan]; }
   async savePlan(b: PlanBlock[]) { this.plan = [...b]; }
 }

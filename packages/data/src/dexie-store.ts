@@ -115,6 +115,11 @@ export class DexieStore extends Dexie implements StudyStore {
   listReferences() { return this.refs.toArray(); }
   async saveReference(r: Reference) { await this.refs.put(r); }
   deleteReference(id: string) { return this.refs.delete(id); }
+  async clearAll() {
+    await this.transaction('rw', this.tables, async () => {
+      await Promise.all(this.tables.map((t) => t.clear()));
+    });
+  }
   async listPlan() {
     return (await this.plan.orderBy('start').toArray()).map(({ id: _id, ...b }) => b as PlanBlock);
   }

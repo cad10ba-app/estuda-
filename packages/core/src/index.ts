@@ -13,3 +13,4 @@ export * from './topics';
 export * from './progress';
 export * from './projects';
 export * from './references';
+export * from './privacy';

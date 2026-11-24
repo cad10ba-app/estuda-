@@ -106,6 +106,8 @@ export interface StudyStore {
   listReferences(): Promise<Reference[]>;
   saveReference(ref: Reference): Promise<void>;
   deleteReference(id: string): Promise<void>;
+  /** Apaga TODOS os dados do usuário (LGPD, REQ-032). */
+  clearAll(): Promise<void>;
   listPlan(): Promise<PlanBlock[]>;
   savePlan(blocks: PlanBlock[]): Promise<void>;
 }

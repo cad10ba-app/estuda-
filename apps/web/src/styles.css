@@ -73,3 +73,5 @@ h3 { font-size: 14px; margin: 16px 0 6px; color: var(--muted); }
 .refform { display: grid; gap: 6px; }
 .ref { font-size: 14px; }
 button.danger { color: #dc2626; }
+button.danger-btn { background: #dc2626; width: 100%; margin-top: 8px; }
+.card input { width: 100%; margin-top: 8px; }

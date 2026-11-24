@@ -42,7 +42,7 @@ Validar documentação, entrevistas com 5–10 alunos por nível, protótipo Fig
 8. Timer e sessões — REQ-009–010. ✅
 9. Lembretes: tela Hoje, exportação `.ics` e Web Push — REQ-030.
 10. Cartões + SM-2 + revisão do dia — REQ-012, 013. ✅ (decks pendentes; REQ-014 revisões D+1/7/30 por tópico ✅)
-11. LGPD: exportar/excluir — REQ-032.
+11. LGPD: exportar/excluir — REQ-032. ✅
 
 ## Riscos de cronograma
 Motor de planejamento (iterar com usuários reais), conformidade para menores, Web Push no iOS (exige PWA instalado) — mitigados com protótipos antecipados (ver `10`).
@@ -52,7 +52,7 @@ Motor de planejamento (iterar com usuários reais), conformidade para menores, W
 |---|---|
 | Backlog 1–11 (exceto LGPD exportar/excluir) | ✅ |
 | REQ-026 painel de progresso, REQ-027 retrospectiva semanal | ✅ |
-| REQ-032 exportar/excluir dados (LGPD) | pendente |
+| REQ-032 exportar/excluir dados (LGPD) | ✅ |
 | REQ-030 Web Push, REQ-031 sync em nuvem | pendente (exigem servidor/Supabase) |
 | REQ-015–017, 019 técnicas avançadas (simulado, Cornell, Feynman, SQ3R) | pendente (EPIC-5) |
 | REQ-020–024 projetos longos: modelos, marcos reversos, meta de escrita no plano, referências ABNT, alerta de risco | ✅ |

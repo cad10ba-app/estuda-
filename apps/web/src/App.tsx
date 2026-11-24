@@ -9,6 +9,7 @@ import { Review } from './Review';
 import { Progress } from './Progress';
 import { Projects } from './Projects';
 import { More, type MoreScreen } from './More';
+import { Privacy } from './Privacy';
 import { displayName } from './names';
 import { Focus, beginSession, loadActive, type ActiveSession } from './Focus';
 
@@ -93,6 +94,7 @@ export function App() {
         {more === 'menu' && <More onPick={setMore} />}
         {more === 'progresso' && <>{back}<Progress onChange={refresh} /></>}
         {more === 'projetos' && <>{back}<Projects onChange={refresh} /></>}
+        {more === 'privacidade' && <>{back}<Privacy /></>}
         {more === 'disciplinas' && <>{back}<Subjects onChange={refresh} /></>}
         {nav}
       </>
