@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { Subject } from '@estuda/engine';
+import type { Project, Subject } from '@estuda/engine';
+import { displayName } from './names';
 import { applyRetrospective, suggestionsFor, weeklyReport, type RetrospectiveAnswers, type WeeklyReport } from '@estuda/core';
 import { deps } from './store';
 
@@ -8,6 +9,7 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
 export function Progress({ onChange }: { onChange: () => void }) {
   const [report, setReport] = useState<WeeklyReport | null>(null);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [retro, setRetro] = useState(false);
   const [load, setLoad] = useState<RetrospectiveAnswers['load']>('ok');
   const [hard, setHard] = useState('');
@@ -16,11 +18,12 @@ export function Progress({ onChange }: { onChange: () => void }) {
   const refresh = useCallback(async () => {
     setReport(await weeklyReport(deps));
     setSubjects(await deps.store.listSubjects());
+    setProjects(await deps.store.listProjects());
   }, []);
   useEffect(() => { void refresh(); }, [refresh]);
 
   if (!report) return <main className="app"><p className="muted">Carregando…</p></main>;
-  const name = (id: string) => subjects.find((s) => s.id === id)?.name ?? id;
+  const name = (id: string) => displayName(id, subjects, projects);
   const suggestions = suggestionsFor(report);
 
   const apply = async () => {

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { PlanBlock, Subject, Topic } from '@estuda/engine';
+import type { PlanBlock, Project, Subject, Topic } from '@estuda/engine';
+import { displayName } from './names';
 import { freeSlots, groupByDay, markBlockMissed, moveBlock, setBlockLocked } from '@estuda/core';
 import { deps } from './store';
 
-const TYPE_LABEL = { estudo: 'Estudo', revisao: 'Revisão', simulado: 'Simulado' } as const;
+const TYPE_LABEL = { estudo: 'Estudo', revisao: 'Revisão', simulado: 'Simulado', escrita: 'Escrita' } as const;
 const hhmm = (d: Date) => d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 const dayLabel = (d: Date) => d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
 const slotLabel = (d: Date) => `${dayLabel(d)} ${hhmm(d)}`;
@@ -11,6 +12,7 @@ const slotLabel = (d: Date) => `${dayLabel(d)} ${hhmm(d)}`;
 export function Plan({ onChange }: { onChange: () => void }) {
   const [plan, setPlan] = useState<PlanBlock[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [free, setFree] = useState<Date[]>([]);
   const [moving, setMoving] = useState<number | null>(null);
@@ -20,6 +22,7 @@ export function Plan({ onChange }: { onChange: () => void }) {
     setPlan(await deps.store.listPlan());
     setSubjects(await deps.store.listSubjects());
     setTopics(await deps.store.listTopics());
+    setProjects(await deps.store.listProjects());
     setFree(await freeSlots(deps));
   }, []);
   useEffect(() => { void load(); }, [load]);
@@ -37,7 +40,7 @@ export function Plan({ onChange }: { onChange: () => void }) {
     }
   };
 
-  const name = (id: string) => subjects.find((s) => s.id === id)?.name ?? id;
+  const name = (id: string) => displayName(id, subjects, projects);
   const now = deps.clock.now();
   const days = groupByDay(plan, now);
 

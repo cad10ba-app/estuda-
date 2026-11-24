@@ -62,3 +62,14 @@ button.link.inline { display: inline; min-height: 0; padding: 0 4px; }
 .bar { height: 8px; background: var(--border); border-radius: 999px; overflow: hidden; }
 .bar > div { height: 100%; background: var(--accent); }
 .tabs button { font-size: 12px; }
+.back { position: relative; padding: 8px 16px 0; min-height: 36px; flex: none; }
+h3 { font-size: 14px; margin: 16px 0 6px; color: var(--muted); }
+.project { margin: 12px 0; display: grid; gap: 6px; }
+.project .title { text-align: left; min-height: 0; padding: 0; white-space: normal; }
+.check { display: flex; gap: 8px; align-items: center; margin: 4px 0; }
+.check span:nth-of-type(1) { flex: 1; }
+.check input { flex: none; min-height: 20px; width: 20px; }
+.done { text-decoration: line-through; color: var(--muted); }
+.refform { display: grid; gap: 6px; }
+.ref { font-size: 14px; }
+button.danger { color: #dc2626; }

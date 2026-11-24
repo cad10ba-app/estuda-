@@ -55,4 +55,5 @@ Motor de planejamento (iterar com usuários reais), conformidade para menores, W
 | REQ-032 exportar/excluir dados (LGPD) | pendente |
 | REQ-030 Web Push, REQ-031 sync em nuvem | pendente (exigem servidor/Supabase) |
 | REQ-015–017, 019 técnicas avançadas (simulado, Cornell, Feynman, SQ3R) | pendente (EPIC-5) |
-| REQ-020–025 projetos longos (TCC) | pendente (EPIC-6) |
+| REQ-020–024 projetos longos: modelos, marcos reversos, meta de escrita no plano, referências ABNT, alerta de risco | ✅ |
+| REQ-025 reuniões com orientador | pendente |

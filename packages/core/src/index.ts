@@ -11,3 +11,5 @@ export * from './cards';
 export * from './availability';
 export * from './topics';
 export * from './progress';
+export * from './projects';
+export * from './references';

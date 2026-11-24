@@ -1,5 +1,5 @@
-import type { AvailabilityWindow, Deadline, PlanBlock, Profile, Subject, Topic } from '@estuda/engine';
-import type { Card, StudySession, StudyStore, TopicReview } from './ports';
+import type { AvailabilityWindow, Deadline, PlanBlock, Profile, Subject, Topic, Milestone, Project } from '@estuda/engine';
+import type { Card, Reference, StudySession, StudyStore, TopicReview, WritingLog } from './ports';
 
 /** Implementação em memória: testes e demos. */
 export class MemoryStore implements StudyStore {
@@ -11,6 +11,10 @@ export class MemoryStore implements StudyStore {
   private sessions: StudySession[] = [];
   private cards = new Map<string, Card>();
   private topics = new Map<string, Topic>();
+  private projects = new Map<string, Project>();
+  private milestones = new Map<string, Milestone>();
+  private logs = new Map<string, WritingLog>();
+  private refs = new Map<string, Reference>();
   private reviews = new Map<string, TopicReview>();
 
   async getProfile() { return this.profile; }
@@ -33,6 +37,21 @@ export class MemoryStore implements StudyStore {
   async deleteTopic(id: string) { this.topics.delete(id); for (const [k, r] of this.reviews) if (r.topicId === id) this.reviews.delete(k); }
   async listTopicReviews() { return [...this.reviews.values()]; }
   async saveTopicReview(r: TopicReview) { this.reviews.set(r.id, r); }
+  async listProjects() { return [...this.projects.values()]; }
+  async saveProject(p: Project) { this.projects.set(p.id, p); }
+  async deleteProject(id: string) {
+    this.projects.delete(id);
+    for (const [k, m] of this.milestones) if (m.projectId === id) this.milestones.delete(k);
+    for (const [k, l] of this.logs) if (l.projectId === id) this.logs.delete(k);
+    for (const [k, r] of this.refs) if (r.projectId === id) this.refs.delete(k);
+  }
+  async listMilestones() { return [...this.milestones.values()]; }
+  async saveMilestone(m: Milestone) { this.milestones.set(m.id, m); }
+  async listWritingLogs() { return [...this.logs.values()]; }
+  async saveWritingLog(l: WritingLog) { this.logs.set(l.id, l); }
+  async listReferences() { return [...this.refs.values()]; }
+  async saveReference(r: Reference) { this.refs.set(r.id, r); }
+  async deleteReference(id: string) { this.refs.delete(id); }
   async listPlan() { return [...this.plan]; }
   async savePlan(b: PlanBlock[]) { this.plan = [...b]; }
 }

@@ -47,7 +47,7 @@ export interface AvailabilityWindow {
   endMin: number;
 }
 
-export type BlockType = 'estudo' | 'revisao' | 'simulado';
+export type BlockType = 'estudo' | 'revisao' | 'simulado' | 'escrita';
 
 export interface PlanBlock {
   start: Date;
@@ -75,6 +75,8 @@ export interface PlanInput {
   from?: Date;
   /** Blocos perdidos a repor por disciplina (id → quantidade). */
   carryOver?: Record<string, number>;
+  /** Blocos semanais reservados a projetos longos (id da disciplina sintética `project:<id>`). */
+  projectSlots?: { id: string; blocks: number }[];
 }
 
 export interface PlanResult {

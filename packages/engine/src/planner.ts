@@ -122,17 +122,63 @@ export function pickTopic(topics: Topic[], type: BlockType, n: number): Topic | 
   return pool.length ? pool[n % pool.length] : undefined;
 }
 
+/**
+ * Reserva slots para projetos longos: no máximo 60% dos slots, espalhados pelos dias
+ * (um bloco por dia na 1ª passada, depois mais um por dia enquanto faltar).
+ */
+export function reserveProjectSlots(
+  slots: Slot[],
+  projects: { id: string; blocks: number }[],
+  warnings: string[],
+  weekStart: Date,
+): Map<number, string> {
+  const out = new Map<number, string>();
+  if (projects.length === 0 || slots.length === 0) return out;
+  let budget = Math.floor(slots.length * 0.6);
+  const byDay = new Map<number, number[]>();
+  for (const s of slots) {
+    const d = Math.floor((s.start.getTime() - weekStart.getTime()) / DAY_MS);
+    byDay.set(d, [...(byDay.get(d) ?? []), s.start.getTime()]);
+  }
+  const days = [...byDay.keys()].sort((a, b) => a - b);
+  for (const p of projects) {
+    let need = p.blocks;
+    for (let pass = 0; need > 0 && budget > 0; pass++) {
+      let placed = false;
+      for (const d of days) {
+        if (need <= 0 || budget <= 0) break;
+        const free = (byDay.get(d) ?? []).filter((t) => !out.has(t));
+        const pick = free[pass === 0 ? 0 : Math.floor(free.length / 2)];
+        if (pick === undefined) continue;
+        out.set(pick, `project:${p.id}`);
+        need--; budget--; placed = true;
+      }
+      if (!placed) break;
+    }
+    if (need > 0) warnings.push(`Não coube toda a escrita do projeto (${need} bloco(s) a menos): amplie a disponibilidade.`);
+  }
+  return out;
+}
+
 export function generateWeeklyPlan(input: PlanInput): PlanResult {
   const { weekStart, subjects, deadlines, locked = [] } = input;
   const warnings: string[] = [];
   const priorities = computePriorities(subjects, deadlines, weekStart);
-  const slots = buildSlots(input);
+  const allSlots = buildSlots(input);
+  const reserved = reserveProjectSlots(allSlots, input.projectSlots ?? [], warnings, weekStart);
+  const slots = allSlots.filter((s) => !reserved.has(s.start.getTime()));
   const base = allocateBlocks(priorities, slots.length);
   const { alloc: remaining, short } = applyCarryOver(base, priorities, input.carryOver ?? {});
   for (const [id, n] of Object.entries(short)) {
     const nm = subjects.find((x) => x.id === id)?.name ?? id;
     warnings.push(`Não coube repor ${n} bloco(s) de "${nm}": amplie a disponibilidade.`);
   }
+  const projectBlocks: PlanBlock[] = [...reserved.entries()].map(([t, id]) => ({
+    start: new Date(t),
+    durationMin: input.profile.focusMin,
+    type: 'escrita' as const,
+    subjectId: id,
+  }));
   const counts: Record<string, number> = {};
   const typeCounts: Record<string, number> = {};
   const blocks: PlanBlock[] = [];
@@ -172,6 +218,6 @@ export function generateWeeklyPlan(input: PlanInput): PlanResult {
       warnings.push(`Prazo de "${s.name}" em ${days} dia(s) sem cobertura no plano.`);
     }
   }
-  const all = [...blocks, ...locked].sort((a, b) => a.start.getTime() - b.start.getTime());
+  const all = [...blocks, ...projectBlocks, ...locked].sort((a, b) => a.start.getTime() - b.start.getTime());
   return { blocks: all, warnings, priorities };
 }

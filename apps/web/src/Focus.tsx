@@ -40,9 +40,10 @@ const fmt = (ms: number) => {
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 };
 
-export function Focus({ active, subjects, onChange, onFinished }: {
+export function Focus({ active, subjects, nameOf, onChange, onFinished }: {
   active: ActiveSession | null;
   subjects: Subject[];
+  nameOf: (id: string) => string;
   onChange: (a: ActiveSession | null) => void;
   onFinished: () => void;
 }) {
@@ -80,7 +81,7 @@ export function Focus({ active, subjects, onChange, onFinished }: {
     );
   }
 
-  const name = subjects.find((s) => s.id === active.subjectId)?.name ?? active.subjectId;
+  const name = nameOf(active.subjectId);
   const t = active.timer;
   const finish = async () => {
     await finishSession(deps, {

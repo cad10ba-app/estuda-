@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie';
-import type { AvailabilityWindow, Deadline, PlanBlock, Profile, Subject, Topic } from '@estuda/engine';
-import type { Card, StudySession, StudyStore, TopicReview } from '@estuda/core';
+import type { AvailabilityWindow, Deadline, PlanBlock, Profile, Subject, Topic, Milestone, Project } from '@estuda/engine';
+import type { Card, Reference, StudySession, StudyStore, TopicReview, WritingLog } from '@estuda/core';
 
 interface Row<T> { id: string; value: T }
 
@@ -13,6 +13,10 @@ export class DexieStore extends Dexie implements StudyStore {
   private cards!: EntityTable<Card, 'id'>;
   private topics!: EntityTable<Topic, 'id'>;
   private topicReviews!: EntityTable<TopicReview, 'id'>;
+  private projects!: EntityTable<Project, 'id'>;
+  private milestones!: EntityTable<Milestone, 'id'>;
+  private writingLogs!: EntityTable<WritingLog, 'id'>;
+  private refs!: EntityTable<Reference, 'id'>;
   private plan!: EntityTable<PlanBlock & { id: number }, 'id'>;
 
   constructor(name = 'estuda') {
@@ -48,6 +52,20 @@ export class DexieStore extends Dexie implements StudyStore {
       topics: 'id, subjectId',
       topicReviews: 'id, topicId, due',
     });
+    this.version(5).stores({
+      kv: 'id',
+      subjects: 'id',
+      deadlines: 'id, subjectId',
+      plan: '++id, start',
+      sessions: 'id, startedAt',
+      cards: 'id, subjectId, due',
+      topics: 'id, subjectId',
+      topicReviews: 'id, topicId, due',
+      projects: 'id',
+      milestones: 'id, projectId',
+      writingLogs: 'id, projectId',
+      refs: 'id, projectId',
+    });
   }
 
   private async getKv<T>(id: string): Promise<T | undefined> {
@@ -80,6 +98,23 @@ export class DexieStore extends Dexie implements StudyStore {
   }
   listTopicReviews() { return this.topicReviews.toArray(); }
   async saveTopicReview(r: TopicReview) { await this.topicReviews.put(r); }
+  listProjects() { return this.projects.toArray(); }
+  async saveProject(p: Project) { await this.projects.put(p); }
+  async deleteProject(id: string) {
+    await this.transaction('rw', [this.projects, this.milestones, this.writingLogs, this.refs], async () => {
+      await this.projects.delete(id);
+      await this.milestones.where('projectId').equals(id).delete();
+      await this.writingLogs.where('projectId').equals(id).delete();
+      await this.refs.where('projectId').equals(id).delete();
+    });
+  }
+  listMilestones() { return this.milestones.toArray(); }
+  async saveMilestone(m: Milestone) { await this.milestones.put(m); }
+  listWritingLogs() { return this.writingLogs.toArray(); }
+  async saveWritingLog(l: WritingLog) { await this.writingLogs.put(l); }
+  listReferences() { return this.refs.toArray(); }
+  async saveReference(r: Reference) { await this.refs.put(r); }
+  deleteReference(id: string) { return this.refs.delete(id); }
   async listPlan() {
     return (await this.plan.orderBy('start').toArray()).map(({ id: _id, ...b }) => b as PlanBlock);
   }

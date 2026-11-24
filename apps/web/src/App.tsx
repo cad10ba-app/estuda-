@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { PlanBlock, Subject, Topic } from '@estuda/engine';
+import type { PlanBlock, Project, Subject, Topic } from '@estuda/engine';
 import { blocksForDay, daySummary, doneByBlock, isBlockDone, planToICS, planWeek, reviewQueue, dueTopicReviews } from '@estuda/core';
 import { deps } from './store';
 import { Onboarding } from './Onboarding';
@@ -7,20 +7,25 @@ import { Subjects } from './Subjects';
 import { Plan } from './Plan';
 import { Review } from './Review';
 import { Progress } from './Progress';
+import { Projects } from './Projects';
+import { More, type MoreScreen } from './More';
+import { displayName } from './names';
 import { Focus, beginSession, loadActive, type ActiveSession } from './Focus';
 
-const TYPE_LABEL = { estudo: 'Estudo', revisao: 'Revisão', simulado: 'Simulado' } as const;
+const TYPE_LABEL = { estudo: 'Estudo', revisao: 'Revisão', simulado: 'Simulado', escrita: 'Escrita' } as const;
 
 export function App() {
   const [blocks, setBlocks] = useState<PlanBlock[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [ready, setReady] = useState<'loading' | 'onboarding' | 'app'>('loading');
-  const [tab, setTab] = useState<'hoje' | 'plano' | 'foco' | 'revisar' | 'progresso' | 'disciplinas'>('hoje');
+  const [tab, setTab] = useState<'hoje' | 'plano' | 'foco' | 'revisar' | 'mais'>('hoje');
   const [active, setActive] = useState<ActiveSession | null>(loadActive);
   const [done, setDone] = useState<Map<string, number>>(new Map());
   const [dueCount, setDueCount] = useState(0);
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [more, setMore] = useState<MoreScreen>('menu');
   const [summary, setSummary] = useState({ plannedMin: 0, actualMin: 0 });
 
   const refresh = useCallback(async () => {
@@ -30,6 +35,7 @@ export function App() {
     setSummary(await daySummary(deps));
     setDueCount((await reviewQueue(deps)).queue.length + (await dueTopicReviews(deps)).length);
     setTopics(await deps.store.listTopics());
+    setProjects(await deps.store.listProjects());
   }, []);
 
   const replan = useCallback(async () => {
@@ -46,7 +52,7 @@ export function App() {
     })();
   }, [refresh]);
 
-  const name = (id: string) => subjects.find((s) => s.id === id)?.name ?? id;
+  const name = (id: string) => displayName(id, subjects, projects);
 
   const exportIcs = async () => {
     const ics = planToICS(await deps.store.listPlan(), subjects);
@@ -61,30 +67,36 @@ export function App() {
     return <Onboarding onDone={async () => { await refresh(); setReady('app'); }} />;
   }
 
+  const go = (t: typeof tab) => { setTab(t); if (t === 'mais') setMore('menu'); void refresh(); };
   const nav = (
     <nav className="tabs">
-      <button className={tab === 'hoje' ? 'on' : ''} onClick={() => { setTab('hoje'); void refresh(); }}>Hoje</button>
-      <button className={tab === 'plano' ? 'on' : ''} onClick={() => setTab('plano')}>Plano</button>
-      <button className={tab === 'foco' ? 'on' : ''} onClick={() => setTab('foco')}>Foco{active ? ' ●' : ''}</button>
-      <button className={tab === 'revisar' ? 'on' : ''} onClick={() => setTab('revisar')}>Revisar{dueCount > 0 ? ` (${dueCount})` : ''}</button>
-      <button className={tab === 'progresso' ? 'on' : ''} onClick={() => setTab('progresso')}>Progresso</button>
-      <button className={tab === 'disciplinas' ? 'on' : ''} onClick={() => setTab('disciplinas')}>Disciplinas</button>
+      <button className={tab === 'hoje' ? 'on' : ''} onClick={() => go('hoje')}>Hoje</button>
+      <button className={tab === 'plano' ? 'on' : ''} onClick={() => go('plano')}>Plano</button>
+      <button className={tab === 'foco' ? 'on' : ''} onClick={() => go('foco')}>Foco{active ? ' ●' : ''}</button>
+      <button className={tab === 'revisar' ? 'on' : ''} onClick={() => go('revisar')}>Revisar{dueCount > 0 ? ` (${dueCount})` : ''}</button>
+      <button className={tab === 'mais' ? 'on' : ''} onClick={() => go('mais')}>Mais</button>
     </nav>
   );
   if (tab === 'plano') {
     return <><Plan onChange={refresh} />{nav}</>;
   }
-  if (tab === 'progresso') {
-    return <><Progress onChange={refresh} />{nav}</>;
-  }
   if (tab === 'revisar') {
     return <><Review onChange={refresh} />{nav}</>;
   }
   if (tab === 'foco') {
-    return <><Focus active={active} subjects={subjects} onChange={setActive} onFinished={() => { void refresh(); setTab('hoje'); }} />{nav}</>;
+    return <><Focus active={active} subjects={subjects} nameOf={name} onChange={setActive} onFinished={() => { void refresh(); setTab('hoje'); }} />{nav}</>;
   }
-  if (tab === 'disciplinas') {
-    return <><Subjects onChange={refresh} />{nav}</>;
+  if (tab === 'mais') {
+    const back = <button className="link back" onClick={() => setMore('menu')}>‹ Mais</button>;
+    return (
+      <>
+        {more === 'menu' && <More onPick={setMore} />}
+        {more === 'progresso' && <>{back}<Progress onChange={refresh} /></>}
+        {more === 'projetos' && <>{back}<Projects onChange={refresh} /></>}
+        {more === 'disciplinas' && <>{back}<Subjects onChange={refresh} /></>}
+        {nav}
+      </>
+    );
   }
 
   return (

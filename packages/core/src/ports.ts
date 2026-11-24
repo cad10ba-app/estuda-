@@ -1,4 +1,4 @@
-import type { AvailabilityWindow, Deadline, PlanBlock, Profile, Subject, Topic } from '@estuda/engine';
+import type { AvailabilityWindow, Deadline, Milestone, PlanBlock, Profile, Project, Subject, Topic } from '@estuda/engine';
 
 /** Sessão de estudo realizada (REQ-010: tempo real vs planejado). */
 export interface StudySession {
@@ -37,6 +37,35 @@ export interface TopicReview {
   done: boolean;
 }
 
+/** Registro diário de escrita de um projeto (REQ-022). */
+export interface WritingLog {
+  id: string;
+  projectId: string;
+  /** YYYY-MM-DD (UTC). */
+  date: string;
+  amount: number;
+}
+
+export type ReferenceType = 'livro' | 'artigo' | 'site';
+
+/** Referência bibliográfica de um projeto (REQ-023). */
+export interface Reference {
+  id: string;
+  projectId: string;
+  type: ReferenceType;
+  /** Formato ABNT: "SOBRENOME, Nome; SOBRENOME, Nome". */
+  authors: string;
+  title: string;
+  /** Editora (livro) ou periódico (artigo). */
+  source?: string;
+  place?: string;
+  year?: number;
+  volume?: string;
+  pages?: string;
+  url?: string;
+  accessedAt?: string;
+}
+
 /** Relógio injetável (testes e fuso). */
 export interface Clock {
   now(): Date;
@@ -67,6 +96,16 @@ export interface StudyStore {
   deleteTopic(id: string): Promise<void>;
   listTopicReviews(): Promise<TopicReview[]>;
   saveTopicReview(review: TopicReview): Promise<void>;
+  listProjects(): Promise<Project[]>;
+  saveProject(project: Project): Promise<void>;
+  deleteProject(id: string): Promise<void>;
+  listMilestones(): Promise<Milestone[]>;
+  saveMilestone(milestone: Milestone): Promise<void>;
+  listWritingLogs(): Promise<WritingLog[]>;
+  saveWritingLog(log: WritingLog): Promise<void>;
+  listReferences(): Promise<Reference[]>;
+  saveReference(ref: Reference): Promise<void>;
+  deleteReference(id: string): Promise<void>;
   listPlan(): Promise<PlanBlock[]>;
   savePlan(blocks: PlanBlock[]): Promise<void>;
 }
