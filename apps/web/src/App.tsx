@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { PlanBlock, Subject } from '@estuda/engine';
-import { blocksForDay, planToICS, planWeek } from '@estuda/core';
+import { blocksForDay, daySummary, doneByBlock, isBlockDone, planToICS, planWeek } from '@estuda/core';
 import { deps } from './store';
 import { Onboarding } from './Onboarding';
 import { Subjects } from './Subjects';
+import { Focus, beginSession, loadActive, type ActiveSession } from './Focus';
 
 const TYPE_LABEL = { estudo: 'Estudo', revisao: 'Revisão', simulado: 'Simulado' } as const;
 
@@ -12,11 +13,16 @@ export function App() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [ready, setReady] = useState<'loading' | 'onboarding' | 'app'>('loading');
-  const [tab, setTab] = useState<'hoje' | 'disciplinas'>('hoje');
+  const [tab, setTab] = useState<'hoje' | 'foco' | 'disciplinas'>('hoje');
+  const [active, setActive] = useState<ActiveSession | null>(loadActive);
+  const [done, setDone] = useState<Map<string, number>>(new Map());
+  const [summary, setSummary] = useState({ plannedMin: 0, actualMin: 0 });
 
   const refresh = useCallback(async () => {
     setSubjects(await deps.store.listSubjects());
     setBlocks(await blocksForDay(deps));
+    setDone(doneByBlock(await deps.store.listSessions()));
+    setSummary(await daySummary(deps));
   }, []);
 
   const replan = useCallback(async () => {
@@ -51,9 +57,13 @@ export function App() {
   const nav = (
     <nav className="tabs">
       <button className={tab === 'hoje' ? 'on' : ''} onClick={() => { setTab('hoje'); void refresh(); }}>Hoje</button>
+      <button className={tab === 'foco' ? 'on' : ''} onClick={() => setTab('foco')}>Foco{active ? ' ●' : ''}</button>
       <button className={tab === 'disciplinas' ? 'on' : ''} onClick={() => setTab('disciplinas')}>Disciplinas</button>
     </nav>
   );
+  if (tab === 'foco') {
+    return <><Focus active={active} subjects={subjects} onChange={setActive} onFinished={() => { void refresh(); setTab('hoje'); }} />{nav}</>;
+  }
   if (tab === 'disciplinas') {
     return <><Subjects onChange={refresh} />{nav}</>;
   }
@@ -63,7 +73,9 @@ export function App() {
     <main className="app">
       <header>
         <h1>Hoje</h1>
-        <p className="muted">O que estudar agora</p>
+        <p className="muted">
+          Hoje: {summary.actualMin} de {summary.plannedMin} min planejados
+        </p>
       </header>
 
       {warnings.map((w) => (
@@ -77,10 +89,16 @@ export function App() {
             <time>
               {b.start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
             </time>
-            <div>
+            <div className="grow">
               <strong>{name(b.subjectId)}</strong>
               <span className="muted"> · {TYPE_LABEL[b.type]} · {b.durationMin} min</span>
+              {(done.get(b.start.toISOString()) ?? 0) > 0 && (
+                <div className="muted">{isBlockDone(b, done) ? '✓ ' : ''}{done.get(b.start.toISOString())} min feitos</div>
+              )}
             </div>
+            {!isBlockDone(b, done) && (
+              <button className="link" onClick={async () => { setActive(await beginSession(b.subjectId, b)); setTab('foco'); }}>Iniciar</button>
+            )}
           </li>
         ))}
       </ul>

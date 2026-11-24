@@ -35,3 +35,7 @@ input, select { min-height: 44px; border: 1px solid var(--border); border-radius
 input[type=range] { padding: 0; width: 100%; }
 label { display: block; margin: 8px 0; }
 .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+.grow { flex: 1; }
+.center { text-align: center; display: grid; gap: 16px; justify-items: center; padding-top: 48px; }
+.clock { font-size: 72px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.center button { width: 100%; flex: none; }

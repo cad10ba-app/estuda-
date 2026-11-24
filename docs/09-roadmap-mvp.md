@@ -39,7 +39,7 @@ Validar documentação, entrevistas com 5–10 alunos por nível, protótipo Fig
 5. CRUD disciplinas/prazos — REQ-002, 004. ✅ (tópicos — REQ-003 pendente)
 6. Tela Plano + edição/travamento — REQ-005, 008.
 7. Replanejamento — REQ-007.
-8. Timer e sessões — REQ-009–010.
+8. Timer e sessões — REQ-009–010. ✅
 9. Lembretes: tela Hoje, exportação `.ics` e Web Push — REQ-030.
 10. Decks/cartões + SM-2 + revisão do dia — REQ-012–014.
 11. LGPD: exportar/excluir — REQ-032.

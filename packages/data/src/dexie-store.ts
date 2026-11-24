@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type { AvailabilityWindow, Deadline, PlanBlock, Profile, Subject } from '@estuda/engine';
-import type { StudyStore } from '@estuda/core';
+import type { StudySession, StudyStore } from '@estuda/core';
 
 interface Row<T> { id: string; value: T }
 
@@ -9,6 +9,7 @@ export class DexieStore extends Dexie implements StudyStore {
   private kv!: EntityTable<Row<unknown>, 'id'>;
   private subjects!: EntityTable<Subject, 'id'>;
   private deadlines!: EntityTable<Deadline, 'id'>;
+  private sessions!: EntityTable<StudySession, 'id'>;
   private plan!: EntityTable<PlanBlock & { id: number }, 'id'>;
 
   constructor(name = 'estuda') {
@@ -18,6 +19,13 @@ export class DexieStore extends Dexie implements StudyStore {
       subjects: 'id',
       deadlines: 'id, subjectId',
       plan: '++id, start',
+    });
+    this.version(2).stores({
+      kv: 'id',
+      subjects: 'id',
+      deadlines: 'id, subjectId',
+      plan: '++id, start',
+      sessions: 'id, startedAt',
     });
   }
 
@@ -38,6 +46,8 @@ export class DexieStore extends Dexie implements StudyStore {
   deleteDeadline(id: string) { return this.deadlines.delete(id); }
   async listWindows() { return (await this.getKv<AvailabilityWindow[]>('windows')) ?? []; }
   saveWindows(w: AvailabilityWindow[]) { return this.setKv('windows', w); }
+  async saveSession(s: StudySession) { await this.sessions.put(s); }
+  listSessions() { return this.sessions.orderBy('startedAt').toArray(); }
   async listPlan() {
     return (await this.plan.orderBy('start').toArray()).map(({ id: _id, ...b }) => b as PlanBlock);
   }
