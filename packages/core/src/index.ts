@@ -10,3 +10,4 @@ export * from './planning';
 export * from './cards';
 export * from './availability';
 export * from './topics';
+export * from './progress';

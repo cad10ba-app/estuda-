@@ -6,6 +6,7 @@ import { Onboarding } from './Onboarding';
 import { Subjects } from './Subjects';
 import { Plan } from './Plan';
 import { Review } from './Review';
+import { Progress } from './Progress';
 import { Focus, beginSession, loadActive, type ActiveSession } from './Focus';
 
 const TYPE_LABEL = { estudo: 'Estudo', revisao: 'Revisão', simulado: 'Simulado' } as const;
@@ -15,7 +16,7 @@ export function App() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [ready, setReady] = useState<'loading' | 'onboarding' | 'app'>('loading');
-  const [tab, setTab] = useState<'hoje' | 'plano' | 'foco' | 'revisar' | 'disciplinas'>('hoje');
+  const [tab, setTab] = useState<'hoje' | 'plano' | 'foco' | 'revisar' | 'progresso' | 'disciplinas'>('hoje');
   const [active, setActive] = useState<ActiveSession | null>(loadActive);
   const [done, setDone] = useState<Map<string, number>>(new Map());
   const [dueCount, setDueCount] = useState(0);
@@ -66,11 +67,15 @@ export function App() {
       <button className={tab === 'plano' ? 'on' : ''} onClick={() => setTab('plano')}>Plano</button>
       <button className={tab === 'foco' ? 'on' : ''} onClick={() => setTab('foco')}>Foco{active ? ' ●' : ''}</button>
       <button className={tab === 'revisar' ? 'on' : ''} onClick={() => setTab('revisar')}>Revisar{dueCount > 0 ? ` (${dueCount})` : ''}</button>
+      <button className={tab === 'progresso' ? 'on' : ''} onClick={() => setTab('progresso')}>Progresso</button>
       <button className={tab === 'disciplinas' ? 'on' : ''} onClick={() => setTab('disciplinas')}>Disciplinas</button>
     </nav>
   );
   if (tab === 'plano') {
     return <><Plan onChange={refresh} />{nav}</>;
+  }
+  if (tab === 'progresso') {
+    return <><Progress onChange={refresh} />{nav}</>;
   }
   if (tab === 'revisar') {
     return <><Review onChange={refresh} />{nav}</>;

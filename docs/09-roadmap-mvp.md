@@ -46,3 +46,13 @@ Validar documentação, entrevistas com 5–10 alunos por nível, protótipo Fig
 
 ## Riscos de cronograma
 Motor de planejamento (iterar com usuários reais), conformidade para menores, Web Push no iOS (exige PWA instalado) — mitigados com protótipos antecipados (ver `10`).
+
+## Progresso da implementação
+| Item | Status |
+|---|---|
+| Backlog 1–11 (exceto LGPD exportar/excluir) | ✅ |
+| REQ-026 painel de progresso, REQ-027 retrospectiva semanal | ✅ |
+| REQ-032 exportar/excluir dados (LGPD) | pendente |
+| REQ-030 Web Push, REQ-031 sync em nuvem | pendente (exigem servidor/Supabase) |
+| REQ-015–017, 019 técnicas avançadas (simulado, Cornell, Feynman, SQ3R) | pendente (EPIC-5) |
+| REQ-020–025 projetos longos (TCC) | pendente (EPIC-6) |

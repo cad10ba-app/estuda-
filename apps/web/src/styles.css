@@ -54,3 +54,11 @@ button.link.inline { display: inline; min-height: 0; padding: 0 4px; }
 .topics { margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 4px; }
 .topic select { flex: none; width: auto; min-height: 36px; }
 .topic .link { flex: none; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+.stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: grid; }
+.stat strong { font-size: 28px; font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: 13px; }
+.bar-row { margin: 10px 0; }
+.bar { height: 8px; background: var(--border); border-radius: 999px; overflow: hidden; }
+.bar > div { height: 100%; background: var(--accent); }
+.tabs button { font-size: 12px; }
