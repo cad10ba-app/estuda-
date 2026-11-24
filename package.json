@@ -1,8 +1,10 @@
 {
   "name": "estuda",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": ["packages/*", "apps/*"],
   "scripts": {
+    "dev": "npm run dev -w @estuda/web",
+    "build": "npm run build -w @estuda/web",
     "test": "npm test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present"
   }
