@@ -6,6 +6,7 @@ import { deps } from './store';
 export interface ActiveSession {
   timer: TimerState;
   subjectId: string;
+  topicId?: string;
   blockStart?: string; // ISO
   startedAt: string; // ISO
   plannedMin: number;
@@ -25,6 +26,7 @@ export async function beginSession(subjectId: string, block?: PlanBlock): Promis
   const a: ActiveSession = {
     timer: startTimer(profile, now),
     subjectId,
+    topicId: block?.topicId,
     blockStart: block?.start.toISOString(),
     startedAt: new Date(now).toISOString(),
     plannedMin: block?.durationMin ?? profile.focusMin,
@@ -82,7 +84,7 @@ export function Focus({ active, subjects, onChange, onFinished }: {
   const t = active.timer;
   const finish = async () => {
     await finishSession(deps, {
-      timer: t, subjectId: active.subjectId,
+      timer: t, subjectId: active.subjectId, topicId: active.topicId,
       blockStart: active.blockStart ? new Date(active.blockStart) : undefined,
       startedAt: new Date(active.startedAt), plannedMin: active.plannedMin,
     });

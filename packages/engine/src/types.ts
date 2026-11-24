@@ -21,6 +21,16 @@ export interface Subject {
   unseenRatio?: number;
 }
 
+export type TopicStatus = 'nao_visto' | 'estudando' | 'dominado';
+
+export interface Topic {
+  id: string;
+  subjectId: string;
+  title: string;
+  order: number;
+  status: TopicStatus;
+}
+
 export type DeadlineKind = 'prova' | 'entrega' | 'simulado' | 'marco';
 
 export interface Deadline {
@@ -44,6 +54,7 @@ export interface PlanBlock {
   durationMin: number;
   type: BlockType;
   subjectId: string;
+  topicId?: string;
   locked?: boolean;
   /** Bloco não realizado; fica no histórico e gera reposição no próximo replanejamento. */
   missed?: boolean;
@@ -56,6 +67,8 @@ export interface PlanInput {
   subjects: Subject[];
   deadlines: Deadline[];
   windows: AvailabilityWindow[];
+  /** Tópicos das disciplinas: usados para escolher o conteúdo de cada bloco. */
+  topics?: Topic[];
   /** Blocos fixos (travados, passados, já realizados); nunca são movidos e ocupam a carga do dia. */
   locked?: PlanBlock[];
   /** Só gera blocos a partir deste instante (replanejamento no meio do dia). */

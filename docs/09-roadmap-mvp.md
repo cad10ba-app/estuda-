@@ -36,12 +36,12 @@ Validar documentação, entrevistas com 5–10 alunos por nível, protótipo Fig
 2. `packages/engine`: pontuação de prioridade + alocação em janelas (com testes) — REQ-006. ✅
 3. `packages/core` (portas `Repository`/`Notifier`/`Clock`) e `packages/data` (Dexie) — `06`, `07`. ✅ (esqueleto: `StudyStore`, `planWeek`, `DexieStore`, tela Hoje, .ics)
 4. Onboarding + perfil por nível — REQ-001. ✅
-5. CRUD disciplinas/prazos — REQ-002, 004. ✅ (tópicos — REQ-003 pendente)
+5. CRUD disciplinas/prazos — REQ-002, 004. ✅ (REQ-003 tópicos ✅)
 6. Tela Plano + edição/travamento — REQ-005, 008. ✅
 7. Replanejamento — REQ-007. ✅
 8. Timer e sessões — REQ-009–010. ✅
 9. Lembretes: tela Hoje, exportação `.ics` e Web Push — REQ-030.
-10. Cartões + SM-2 + revisão do dia — REQ-012, 013. ✅ (decks e revisões automáticas por tópico, REQ-014, pendentes)
+10. Cartões + SM-2 + revisão do dia — REQ-012, 013. ✅ (decks pendentes; REQ-014 revisões D+1/7/30 por tópico ✅)
 11. LGPD: exportar/excluir — REQ-032.
 
 ## Riscos de cronograma

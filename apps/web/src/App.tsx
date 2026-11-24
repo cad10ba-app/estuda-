@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { PlanBlock, Subject } from '@estuda/engine';
-import { blocksForDay, daySummary, doneByBlock, isBlockDone, planToICS, planWeek, reviewQueue } from '@estuda/core';
+import type { PlanBlock, Subject, Topic } from '@estuda/engine';
+import { blocksForDay, daySummary, doneByBlock, isBlockDone, planToICS, planWeek, reviewQueue, dueTopicReviews } from '@estuda/core';
 import { deps } from './store';
 import { Onboarding } from './Onboarding';
 import { Subjects } from './Subjects';
@@ -19,6 +19,7 @@ export function App() {
   const [active, setActive] = useState<ActiveSession | null>(loadActive);
   const [done, setDone] = useState<Map<string, number>>(new Map());
   const [dueCount, setDueCount] = useState(0);
+  const [topics, setTopics] = useState<Topic[]>([]);
   const [summary, setSummary] = useState({ plannedMin: 0, actualMin: 0 });
 
   const refresh = useCallback(async () => {
@@ -26,7 +27,8 @@ export function App() {
     setBlocks(await blocksForDay(deps));
     setDone(doneByBlock(await deps.store.listSessions()));
     setSummary(await daySummary(deps));
-    setDueCount((await reviewQueue(deps)).queue.length);
+    setDueCount((await reviewQueue(deps)).queue.length + (await dueTopicReviews(deps)).length);
+    setTopics(await deps.store.listTopics());
   }, []);
 
   const replan = useCallback(async () => {
@@ -106,6 +108,7 @@ export function App() {
             </time>
             <div className="grow">
               <strong>{name(b.subjectId)}</strong>
+              {b.topicId && <span> — {topics.find((t) => t.id === b.topicId)?.title}</span>}
               <span className="muted"> · {TYPE_LABEL[b.type]} · {b.durationMin} min{b.missed ? ' · perdido' : ''}</span>
               {(done.get(b.start.toISOString()) ?? 0) > 0 && (
                 <div className="muted">{isBlockDone(b, done) ? '✓ ' : ''}{done.get(b.start.toISOString())} min feitos</div>

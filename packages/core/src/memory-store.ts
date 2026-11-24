@@ -1,5 +1,5 @@
-import type { AvailabilityWindow, Deadline, PlanBlock, Profile, Subject } from '@estuda/engine';
-import type { Card, StudySession, StudyStore } from './ports';
+import type { AvailabilityWindow, Deadline, PlanBlock, Profile, Subject, Topic } from '@estuda/engine';
+import type { Card, StudySession, StudyStore, TopicReview } from './ports';
 
 /** Implementação em memória: testes e demos. */
 export class MemoryStore implements StudyStore {
@@ -10,6 +10,8 @@ export class MemoryStore implements StudyStore {
   private plan: PlanBlock[] = [];
   private sessions: StudySession[] = [];
   private cards = new Map<string, Card>();
+  private topics = new Map<string, Topic>();
+  private reviews = new Map<string, TopicReview>();
 
   async getProfile() { return this.profile; }
   async saveProfile(p: Profile) { this.profile = p; }
@@ -26,6 +28,11 @@ export class MemoryStore implements StudyStore {
   async saveCard(c: Card) { this.cards.set(c.id, c); }
   async listCards() { return [...this.cards.values()]; }
   async deleteCard(id: string) { this.cards.delete(id); }
+  async listTopics() { return [...this.topics.values()]; }
+  async saveTopic(t: Topic) { this.topics.set(t.id, t); }
+  async deleteTopic(id: string) { this.topics.delete(id); for (const [k, r] of this.reviews) if (r.topicId === id) this.reviews.delete(k); }
+  async listTopicReviews() { return [...this.reviews.values()]; }
+  async saveTopicReview(r: TopicReview) { this.reviews.set(r.id, r); }
   async listPlan() { return [...this.plan]; }
   async savePlan(b: PlanBlock[]) { this.plan = [...b]; }
 }

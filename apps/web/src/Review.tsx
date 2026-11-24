@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ReviewGrade, Subject } from '@estuda/engine';
-import { addCard, gradeCard, reviewQueue, type Card } from '@estuda/core';
+import { addCard, completeTopicReview, dueTopicReviews, gradeCard, reviewQueue, type Card, type DueTopicReview } from '@estuda/core';
 import { deps } from './store';
 
 const GRADES: { g: ReviewGrade; label: string }[] = [
@@ -13,6 +13,7 @@ const GRADES: { g: ReviewGrade; label: string }[] = [
 export function Review({ onChange }: { onChange: () => void }) {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [queue, setQueue] = useState<Card[]>([]);
+  const [topicDue, setTopicDue] = useState<DueTopicReview[]>([]);
   const [stats, setStats] = useState({ dueTotal: 0, reviewedToday: 0 });
   const [total, setTotal] = useState(0);
   const [shown, setShown] = useState(false);
@@ -30,6 +31,7 @@ export function Review({ onChange }: { onChange: () => void }) {
     setQueue(r.queue);
     setStats({ dueTotal: r.dueTotal, reviewedToday: r.reviewedToday });
     setTotal((await deps.store.listCards()).length);
+    setTopicDue(await dueTopicReviews(deps));
   }, []);
   useEffect(() => { void load(); }, [load]);
 
@@ -62,6 +64,19 @@ export function Review({ onChange }: { onChange: () => void }) {
       <p className="muted">
         {stats.dueTotal} vencido(s) · {stats.reviewedToday} revisado(s) hoje · {total} cartão(ões)
       </p>
+
+      {topicDue.length > 0 && (
+        <section className="card">
+          <strong>Revisões de tópicos</strong>
+          <p className="muted">Releia/explique de memória e marque como revisado.</p>
+          {topicDue.map(({ review, topic }) => (
+            <div key={review.id} className="row between">
+              <span className="grow">{subjectName(topic.subjectId)} · {topic.title}</span>
+              <button className="secondary" onClick={async () => { await completeTopicReview(deps, review.id); await load(); onChange(); }}>Revisei</button>
+            </div>
+          ))}
+        </section>
+      )}
 
       {current ? (
         <section className="card flash">

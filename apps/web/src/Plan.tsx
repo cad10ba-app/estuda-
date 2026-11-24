@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { PlanBlock, Subject } from '@estuda/engine';
+import type { PlanBlock, Subject, Topic } from '@estuda/engine';
 import { freeSlots, groupByDay, markBlockMissed, moveBlock, setBlockLocked } from '@estuda/core';
 import { deps } from './store';
 
@@ -11,6 +11,7 @@ const slotLabel = (d: Date) => `${dayLabel(d)} ${hhmm(d)}`;
 export function Plan({ onChange }: { onChange: () => void }) {
   const [plan, setPlan] = useState<PlanBlock[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [topics, setTopics] = useState<Topic[]>([]);
   const [free, setFree] = useState<Date[]>([]);
   const [moving, setMoving] = useState<number | null>(null);
   const [message, setMessage] = useState('');
@@ -18,6 +19,7 @@ export function Plan({ onChange }: { onChange: () => void }) {
   const load = useCallback(async () => {
     setPlan(await deps.store.listPlan());
     setSubjects(await deps.store.listSubjects());
+    setTopics(await deps.store.listTopics());
     setFree(await freeSlots(deps));
   }, []);
   useEffect(() => { void load(); }, [load]);
@@ -57,6 +59,7 @@ export function Plan({ onChange }: { onChange: () => void }) {
                   <time>{hhmm(b.start)}</time>
                   <div className="grow">
                     <strong>{name(b.subjectId)}</strong>
+                    {b.topicId && <span> — {topics.find((t) => t.id === b.topicId)?.title}</span>}
                     <span className="muted"> · {TYPE_LABEL[b.type]} · {b.durationMin} min{b.missed ? ' · perdido' : ''}</span>
                     {moving === t && (
                       <div className="row">

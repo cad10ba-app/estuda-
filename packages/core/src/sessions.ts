@@ -2,13 +2,14 @@ import type { PlanBlock } from '@estuda/engine';
 import type { Deps, StudySession } from './ports';
 import { startOfDayUTC } from './usecases';
 import { totalFocusMs, type TimerState } from './timer';
+import { markStudied } from './topics';
 
 const DAY_MS = 86_400_000;
 
 /** Encerra o timer e registra a sessão (REQ-010). Não registra se < 1 min de foco. */
 export async function finishSession(
   deps: Deps,
-  input: { timer: TimerState; subjectId: string; blockStart?: Date; startedAt: Date; plannedMin: number },
+  input: { timer: TimerState; subjectId: string; topicId?: string; blockStart?: Date; startedAt: Date; plannedMin: number },
 ): Promise<StudySession | null> {
   const now = deps.clock.now();
   const actualMin = Math.round(totalFocusMs(input.timer, now.getTime()) / 60_000);
@@ -16,6 +17,7 @@ export async function finishSession(
   const session: StudySession = {
     id: `${input.startedAt.getTime()}-${input.subjectId}`,
     subjectId: input.subjectId,
+    topicId: input.topicId,
     blockStart: input.blockStart,
     startedAt: input.startedAt,
     endedAt: now,
@@ -24,6 +26,8 @@ export async function finishSession(
     cycles: input.timer.cycle,
   };
   await deps.store.saveSession(session);
+  // Estudou um tópico planejado: agenda as revisões espaçadas (REQ-014).
+  if (input.topicId && input.plannedMin > 0 && actualMin >= input.plannedMin * 0.5) await markStudied(deps, input.topicId);
   return session;
 }
 

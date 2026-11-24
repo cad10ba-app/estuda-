@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie';
-import type { AvailabilityWindow, Deadline, PlanBlock, Profile, Subject } from '@estuda/engine';
-import type { Card, StudySession, StudyStore } from '@estuda/core';
+import type { AvailabilityWindow, Deadline, PlanBlock, Profile, Subject, Topic } from '@estuda/engine';
+import type { Card, StudySession, StudyStore, TopicReview } from '@estuda/core';
 
 interface Row<T> { id: string; value: T }
 
@@ -11,6 +11,8 @@ export class DexieStore extends Dexie implements StudyStore {
   private deadlines!: EntityTable<Deadline, 'id'>;
   private sessions!: EntityTable<StudySession, 'id'>;
   private cards!: EntityTable<Card, 'id'>;
+  private topics!: EntityTable<Topic, 'id'>;
+  private topicReviews!: EntityTable<TopicReview, 'id'>;
   private plan!: EntityTable<PlanBlock & { id: number }, 'id'>;
 
   constructor(name = 'estuda') {
@@ -36,6 +38,16 @@ export class DexieStore extends Dexie implements StudyStore {
       sessions: 'id, startedAt',
       cards: 'id, subjectId, due',
     });
+    this.version(4).stores({
+      kv: 'id',
+      subjects: 'id',
+      deadlines: 'id, subjectId',
+      plan: '++id, start',
+      sessions: 'id, startedAt',
+      cards: 'id, subjectId, due',
+      topics: 'id, subjectId',
+      topicReviews: 'id, topicId, due',
+    });
   }
 
   private async getKv<T>(id: string): Promise<T | undefined> {
@@ -60,6 +72,14 @@ export class DexieStore extends Dexie implements StudyStore {
   async saveCard(c: Card) { await this.cards.put(c); }
   listCards() { return this.cards.toArray(); }
   deleteCard(id: string) { return this.cards.delete(id); }
+  listTopics() { return this.topics.toArray(); }
+  async saveTopic(t: Topic) { await this.topics.put(t); }
+  async deleteTopic(id: string) {
+    await this.topics.delete(id);
+    await this.topicReviews.where('topicId').equals(id).delete();
+  }
+  listTopicReviews() { return this.topicReviews.toArray(); }
+  async saveTopicReview(r: TopicReview) { await this.topicReviews.put(r); }
   async listPlan() {
     return (await this.plan.orderBy('start').toArray()).map(({ id: _id, ...b }) => b as PlanBlock);
   }

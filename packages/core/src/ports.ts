@@ -1,9 +1,10 @@
-import type { AvailabilityWindow, Deadline, PlanBlock, Profile, Subject } from '@estuda/engine';
+import type { AvailabilityWindow, Deadline, PlanBlock, Profile, Subject, Topic } from '@estuda/engine';
 
 /** Sessão de estudo realizada (REQ-010: tempo real vs planejado). */
 export interface StudySession {
   id: string;
   subjectId: string;
+  topicId?: string;
   /** Início do bloco planejado a que a sessão se refere (se houver). */
   blockStart?: Date;
   startedAt: Date;
@@ -26,6 +27,14 @@ export interface Card {
   due: Date;
   lastReviewedAt?: Date;
   lapses: number;
+}
+
+/** Revisão agendada de um tópico (D+1, D+7, D+30) — REQ-014. */
+export interface TopicReview {
+  id: string;
+  topicId: string;
+  due: Date;
+  done: boolean;
 }
 
 /** Relógio injetável (testes e fuso). */
@@ -53,6 +62,11 @@ export interface StudyStore {
   saveCard(card: Card): Promise<void>;
   listCards(): Promise<Card[]>;
   deleteCard(id: string): Promise<void>;
+  listTopics(): Promise<Topic[]>;
+  saveTopic(topic: Topic): Promise<void>;
+  deleteTopic(id: string): Promise<void>;
+  listTopicReviews(): Promise<TopicReview[]>;
+  saveTopicReview(review: TopicReview): Promise<void>;
   listPlan(): Promise<PlanBlock[]>;
   savePlan(blocks: PlanBlock[]): Promise<void>;
 }

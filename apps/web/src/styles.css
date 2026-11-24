@@ -51,3 +51,6 @@ textarea { width: 100%; min-height: 72px; margin: 8px 0; border: 1px solid var(-
 .add-toggle { width: 100%; margin: 8px 0; }
 button.link.inline { display: inline; min-height: 0; padding: 0 4px; }
 .flash .row button { padding: 0 4px; font-size: 14px; }
+.topics { margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 4px; }
+.topic select { flex: none; width: auto; min-height: 36px; }
+.topic .link { flex: none; }

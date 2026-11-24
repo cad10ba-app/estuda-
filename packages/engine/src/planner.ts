@@ -1,5 +1,5 @@
 import { computePriorities, daysToNextDeadline } from './priority';
-import type { AvailabilityWindow, BlockType, PlanBlock, PlanInput, PlanResult, Profile } from './types';
+import type { AvailabilityWindow, BlockType, PlanBlock, PlanInput, PlanResult, Profile, Topic } from './types';
 
 const DAY_MS = 86_400_000;
 const MIN_MS = 60_000;
@@ -109,6 +109,19 @@ function blockType(daysLeft: number | null, indexInSubject: number): BlockType {
   return indexInSubject % 3 === 2 ? 'simulado' : 'revisao';
 }
 
+/**
+ * Escolhe o tópico do bloco. Estudo: primeiro os "estudando", depois os "não vistos", em ordem.
+ * Revisão/simulado: tópicos já vistos (estudando/dominado). Gira por `n` para variar.
+ */
+export function pickTopic(topics: Topic[], type: BlockType, n: number): Topic | undefined {
+  const sorted = [...topics].sort((a, b) => a.order - b.order);
+  const pool =
+    type === 'estudo'
+      ? [...sorted.filter((t) => t.status === 'estudando'), ...sorted.filter((t) => t.status === 'nao_visto')]
+      : sorted.filter((t) => t.status !== 'nao_visto');
+  return pool.length ? pool[n % pool.length] : undefined;
+}
+
 export function generateWeeklyPlan(input: PlanInput): PlanResult {
   const { weekStart, subjects, deadlines, locked = [] } = input;
   const warnings: string[] = [];
@@ -121,6 +134,7 @@ export function generateWeeklyPlan(input: PlanInput): PlanResult {
     warnings.push(`Não coube repor ${n} bloco(s) de "${nm}": amplie a disponibilidade.`);
   }
   const counts: Record<string, number> = {};
+  const typeCounts: Record<string, number> = {};
   const blocks: PlanBlock[] = [];
   let prev: string | null = null;
 
@@ -138,11 +152,15 @@ export function generateWeeklyPlan(input: PlanInput): PlanResult {
     const n = counts[id] ?? 0;
     counts[id] = n + 1;
     const daysLeft = daysToNextDeadline(id, deadlines, slot.start);
+    const type = blockType(daysLeft, n);
+    const typeCount = (typeCounts[`${id}:${type}`] = (typeCounts[`${id}:${type}`] ?? 0) + 1) - 1;
+    const topic = pickTopic((input.topics ?? []).filter((t) => t.subjectId === id), type, typeCount);
     blocks.push({
       start: slot.start,
       durationMin: input.profile.focusMin,
-      type: blockType(daysLeft, n),
+      type,
       subjectId: id,
+      ...(topic ? { topicId: topic.id } : {}),
     });
     prev = id;
   }

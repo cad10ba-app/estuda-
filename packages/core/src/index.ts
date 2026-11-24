@@ -9,3 +9,4 @@ export * from './sessions';
 export * from './planning';
 export * from './cards';
 export * from './availability';
+export * from './topics';

@@ -19,12 +19,17 @@ export async function planWeek(deps: Deps): Promise<PlanResult> {
   if (!profile) throw new Error('Perfil não configurado: conclua o onboarding.');
   const now = clock.now();
   const weekStart = startOfDayUTC(now);
-  const [subjects, deadlines, windows, current] = await Promise.all([
+  const [rawSubjects, deadlines, windows, current, topics] = await Promise.all([
     store.listSubjects(),
     store.listDeadlines(),
     store.listWindows(),
     store.listPlan(),
+    store.listTopics(),
   ]);
+  const subjects = rawSubjects.map((s) => {
+    const ts = topics.filter((t) => t.subjectId === s.id);
+    return ts.length ? { ...s, unseenRatio: ts.filter((t) => t.status === 'nao_visto').length / ts.length } : s;
+  });
   const horizon = weekStart.getTime() + 7 * DAY_MS;
   const inHorizon = current.filter((b) => b.start.getTime() >= weekStart.getTime() && b.start.getTime() < horizon);
   const fixed = inHorizon.filter((b) => b.start < now || b.locked || b.missed);
@@ -33,7 +38,7 @@ export async function planWeek(deps: Deps): Promise<PlanResult> {
   // Perdidos de hoje em diante (do início do dia) pedem reposição.
   const carryOver: Record<string, number> = {};
   for (const b of inHorizon) if (b.missed) carryOver[b.subjectId] = (carryOver[b.subjectId] ?? 0) + 1;
-  const result = generateWeeklyPlan({ weekStart, profile, subjects, deadlines, windows, locked: fixed, from: now, carryOver });
+  const result = generateWeeklyPlan({ weekStart, profile, subjects, deadlines, windows, topics, locked: fixed, from: now, carryOver });
   await store.savePlan([...history, ...result.blocks]);
   await notifier?.schedule(result.blocks.filter((b) => b.start >= now && !b.missed));
   return result;
