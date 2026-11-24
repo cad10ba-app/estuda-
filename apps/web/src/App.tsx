@@ -4,6 +4,7 @@ import { blocksForDay, daySummary, doneByBlock, isBlockDone, planToICS, planWeek
 import { deps } from './store';
 import { Onboarding } from './Onboarding';
 import { Subjects } from './Subjects';
+import { Plan } from './Plan';
 import { Focus, beginSession, loadActive, type ActiveSession } from './Focus';
 
 const TYPE_LABEL = { estudo: 'Estudo', revisao: 'Revisão', simulado: 'Simulado' } as const;
@@ -13,7 +14,7 @@ export function App() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [ready, setReady] = useState<'loading' | 'onboarding' | 'app'>('loading');
-  const [tab, setTab] = useState<'hoje' | 'foco' | 'disciplinas'>('hoje');
+  const [tab, setTab] = useState<'hoje' | 'plano' | 'foco' | 'disciplinas'>('hoje');
   const [active, setActive] = useState<ActiveSession | null>(loadActive);
   const [done, setDone] = useState<Map<string, number>>(new Map());
   const [summary, setSummary] = useState({ plannedMin: 0, actualMin: 0 });
@@ -57,10 +58,14 @@ export function App() {
   const nav = (
     <nav className="tabs">
       <button className={tab === 'hoje' ? 'on' : ''} onClick={() => { setTab('hoje'); void refresh(); }}>Hoje</button>
+      <button className={tab === 'plano' ? 'on' : ''} onClick={() => setTab('plano')}>Plano</button>
       <button className={tab === 'foco' ? 'on' : ''} onClick={() => setTab('foco')}>Foco{active ? ' ●' : ''}</button>
       <button className={tab === 'disciplinas' ? 'on' : ''} onClick={() => setTab('disciplinas')}>Disciplinas</button>
     </nav>
   );
+  if (tab === 'plano') {
+    return <><Plan onChange={refresh} />{nav}</>;
+  }
   if (tab === 'foco') {
     return <><Focus active={active} subjects={subjects} onChange={setActive} onFinished={() => { void refresh(); setTab('hoje'); }} />{nav}</>;
   }
@@ -85,18 +90,18 @@ export function App() {
       <ul className="blocks">
         {blocks.length === 0 && <li className="muted">Nenhum bloco para hoje.</li>}
         {blocks.map((b) => (
-          <li key={b.start.toISOString()} className="block">
+          <li key={b.start.toISOString()} className={`block ${b.missed ? 'missed' : ''}`}>
             <time>
               {b.start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
             </time>
             <div className="grow">
               <strong>{name(b.subjectId)}</strong>
-              <span className="muted"> · {TYPE_LABEL[b.type]} · {b.durationMin} min</span>
+              <span className="muted"> · {TYPE_LABEL[b.type]} · {b.durationMin} min{b.missed ? ' · perdido' : ''}</span>
               {(done.get(b.start.toISOString()) ?? 0) > 0 && (
                 <div className="muted">{isBlockDone(b, done) ? '✓ ' : ''}{done.get(b.start.toISOString())} min feitos</div>
               )}
             </div>
-            {!isBlockDone(b, done) && (
+            {!isBlockDone(b, done) && !b.missed && (
               <button className="link" onClick={async () => { setActive(await beginSession(b.subjectId, b)); setTab('foco'); }}>Iniciar</button>
             )}
           </li>

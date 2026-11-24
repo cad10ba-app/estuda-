@@ -138,3 +138,27 @@ describe('revisões de tópico', () => {
     expect(out).toHaveLength(5);
   });
 });
+
+describe('replanejamento', () => {
+  const profile = DEFAULT_PROFILES.medio;
+
+  it('from ignora horários passados', () => {
+    const from = new Date(weekStart.getTime() + 20 * 3_600_000); // 20h do dia 0
+    const { blocks } = generateWeeklyPlan({ weekStart, profile, subjects, deadlines: [], windows, from });
+    expect(blocks.every((b) => b.start.getTime() >= from.getTime())).toBe(true);
+  });
+
+  it('carry-over garante blocos de reposição, tirando das de menor prioridade', () => {
+    const base = generateWeeklyPlan({ weekStart, profile, subjects, deadlines: [], windows });
+    const hisBase = base.blocks.filter((b) => b.subjectId === 'his').length;
+    const r = generateWeeklyPlan({ weekStart, profile, subjects, deadlines: [], windows, carryOver: { his: hisBase + 3 } });
+    expect(r.blocks.filter((b) => b.subjectId === 'his').length).toBeGreaterThanOrEqual(hisBase + 3);
+    expect(r.blocks.length).toBe(base.blocks.length);
+  });
+
+  it('avisa quando não cabe repor', () => {
+    const few: AvailabilityWindow[] = [{ weekday: 0, startMin: 18 * 60, endMin: 18 * 60 + 25 }];
+    const r = generateWeeklyPlan({ weekStart, profile, subjects, deadlines: [], windows: few, carryOver: { mat: 3 } });
+    expect(r.warnings.some((w) => w.includes('repor'))).toBe(true);
+  });
+});

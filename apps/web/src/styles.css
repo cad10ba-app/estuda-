@@ -39,3 +39,8 @@ label { display: block; margin: 8px 0; }
 .center { text-align: center; display: grid; gap: 16px; justify-items: center; padding-top: 48px; }
 .clock { font-size: 72px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .center button { width: 100%; flex: none; }
+h2 { font-size: 15px; margin: 20px 0 6px; text-transform: capitalize; color: var(--muted); }
+.block.missed { opacity: .5; text-decoration: line-through; }
+.mini { display: flex; flex-direction: column; align-items: flex-end; }
+.mini .link { min-height: 28px; }
+.tabs button { font-size: 13px; padding: 0 2px; }

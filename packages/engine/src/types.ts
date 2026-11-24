@@ -45,6 +45,8 @@ export interface PlanBlock {
   type: BlockType;
   subjectId: string;
   locked?: boolean;
+  /** Bloco não realizado; fica no histórico e gera reposição no próximo replanejamento. */
+  missed?: boolean;
 }
 
 export interface PlanInput {
@@ -54,8 +56,12 @@ export interface PlanInput {
   subjects: Subject[];
   deadlines: Deadline[];
   windows: AvailabilityWindow[];
-  /** Blocos travados manualmente; nunca são movidos. */
+  /** Blocos fixos (travados, passados, já realizados); nunca são movidos e ocupam a carga do dia. */
   locked?: PlanBlock[];
+  /** Só gera blocos a partir deste instante (replanejamento no meio do dia). */
+  from?: Date;
+  /** Blocos perdidos a repor por disciplina (id → quantidade). */
+  carryOver?: Record<string, number>;
 }
 
 export interface PlanResult {
