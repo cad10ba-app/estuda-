@@ -17,6 +17,7 @@ export interface StudyStore {
   deleteSubject(id: string): Promise<void>;
   listDeadlines(): Promise<Deadline[]>;
   saveDeadline(deadline: Deadline): Promise<void>;
+  deleteDeadline(id: string): Promise<void>;
   listWindows(): Promise<AvailabilityWindow[]>;
   saveWindows(windows: AvailabilityWindow[]): Promise<void>;
   listPlan(): Promise<PlanBlock[]>;

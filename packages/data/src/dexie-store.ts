@@ -35,6 +35,7 @@ export class DexieStore extends Dexie implements StudyStore {
   deleteSubject(id: string) { return this.subjects.delete(id); }
   listDeadlines() { return this.deadlines.toArray(); }
   async saveDeadline(d: Deadline) { await this.deadlines.put(d); }
+  deleteDeadline(id: string) { return this.deadlines.delete(id); }
   async listWindows() { return (await this.getKv<AvailabilityWindow[]>('windows')) ?? []; }
   saveWindows(w: AvailabilityWindow[]) { return this.setKv('windows', w); }
   async listPlan() {

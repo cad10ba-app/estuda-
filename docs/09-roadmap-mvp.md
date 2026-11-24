@@ -35,8 +35,8 @@ Validar documentação, entrevistas com 5–10 alunos por nível, protótipo Fig
 1. Setup do monorepo (Vite + React + TS PWA, Vitest, CI). ✅
 2. `packages/engine`: pontuação de prioridade + alocação em janelas (com testes) — REQ-006. ✅
 3. `packages/core` (portas `Repository`/`Notifier`/`Clock`) e `packages/data` (Dexie) — `06`, `07`. ✅ (esqueleto: `StudyStore`, `planWeek`, `DexieStore`, tela Hoje, .ics)
-4. Onboarding + perfil por nível — REQ-001.
-5. CRUD disciplinas/tópicos/prazos — REQ-002–004.
+4. Onboarding + perfil por nível — REQ-001. ✅
+5. CRUD disciplinas/prazos — REQ-002, 004. ✅ (tópicos — REQ-003 pendente)
 6. Tela Plano + edição/travamento — REQ-005, 008.
 7. Replanejamento — REQ-007.
 8. Timer e sessões — REQ-009–010.

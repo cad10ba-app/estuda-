@@ -16,6 +16,7 @@ export class MemoryStore implements StudyStore {
   async deleteSubject(id: string) { this.subjects.delete(id); }
   async listDeadlines() { return [...this.deadlines.values()]; }
   async saveDeadline(d: Deadline) { this.deadlines.set(d.id, d); }
+  async deleteDeadline(id: string) { this.deadlines.delete(id); }
   async listWindows() { return [...this.windows]; }
   async saveWindows(w: AvailabilityWindow[]) { this.windows = [...w]; }
   async listPlan() { return [...this.plan]; }

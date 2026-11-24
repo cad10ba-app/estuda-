@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { PlanBlock, Subject } from '@estuda/engine';
 import { blocksForDay, planToICS, planWeek } from '@estuda/core';
-import { deps, seedIfEmpty } from './store';
+import { deps } from './store';
+import { Onboarding } from './Onboarding';
+import { Subjects } from './Subjects';
 
 const TYPE_LABEL = { estudo: 'Estudo', revisao: 'Revisão', simulado: 'Simulado' } as const;
 
@@ -9,6 +11,8 @@ export function App() {
   const [blocks, setBlocks] = useState<PlanBlock[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
+  const [ready, setReady] = useState<'loading' | 'onboarding' | 'app'>('loading');
+  const [tab, setTab] = useState<'hoje' | 'disciplinas'>('hoje');
 
   const refresh = useCallback(async () => {
     setSubjects(await deps.store.listSubjects());
@@ -23,11 +27,11 @@ export function App() {
 
   useEffect(() => {
     (async () => {
-      await seedIfEmpty();
-      if ((await deps.store.listPlan()).length === 0) await replan();
-      else await refresh();
+      if (!(await deps.store.getProfile())) return setReady('onboarding');
+      await refresh();
+      setReady('app');
     })();
-  }, [refresh, replan]);
+  }, [refresh]);
 
   const name = (id: string) => subjects.find((s) => s.id === id)?.name ?? id;
 
@@ -39,7 +43,23 @@ export function App() {
     URL.revokeObjectURL(url);
   };
 
+  if (ready === 'loading') return <main className="app"><p className="muted">Carregando…</p></main>;
+  if (ready === 'onboarding') {
+    return <Onboarding onDone={async () => { await refresh(); setReady('app'); }} />;
+  }
+
+  const nav = (
+    <nav className="tabs">
+      <button className={tab === 'hoje' ? 'on' : ''} onClick={() => { setTab('hoje'); void refresh(); }}>Hoje</button>
+      <button className={tab === 'disciplinas' ? 'on' : ''} onClick={() => setTab('disciplinas')}>Disciplinas</button>
+    </nav>
+  );
+  if (tab === 'disciplinas') {
+    return <><Subjects onChange={refresh} />{nav}</>;
+  }
+
   return (
+    <>
     <main className="app">
       <header>
         <h1>Hoje</h1>
@@ -70,5 +90,7 @@ export function App() {
         <button className="secondary" onClick={exportIcs}>Exportar agenda (.ics)</button>
       </footer>
     </main>
+    {nav}
+    </>
   );
 }
