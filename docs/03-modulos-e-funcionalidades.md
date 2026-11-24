@@ -48,8 +48,9 @@ Prioridade MoSCoW: **M** (must/MVP), **S** (should/v1), **C** (could/v2). Épico
 | REQ-027 | Retrospectiva semanal guiada que ajusta o plano | 9 | S | EPIC-7 | TEC-15 |
 | REQ-028 | Gamificação (sequência, XP, conquistas) por nível de intensidade | 9 | S | EPIC-7 | — |
 | REQ-029 | Vínculo de responsável com consentimento e resumo semanal | 10 | S | EPIC-7 | — |
-| REQ-030 | Notificações locais inteligentes (início de bloco, revisões vencidas) | 11 | M | EPIC-3 | — |
-| REQ-031 | Funcionamento offline e sincronização | 11 | M | EPIC-9 | — |
+| REQ-030 | Lembretes (início de bloco, revisões vencidas): tela Hoje, exportação .ics e Web Push; notificações locais no nativo | 11 | M | EPIC-3 | — |
+| REQ-031 | Funcionamento offline (PWA) e sincronização | 11 | M | EPIC-9 | — |
+| REQ-035 | Instalação como PWA (manifest, ícones, guia de instalação iOS/Android) | 11 | M | EPIC-9 | — |
 | REQ-032 | Exportar/excluir dados (LGPD) | 11 | M | EPIC-9 | — |
 | REQ-033 | Trilha ENEM/vestibular (pesos por área, contagem regressiva, redação) | 6 | C | EPIC-8 | TEC-14 |
 | REQ-034 | Geração de cartões/resumos por IA a partir de textos do aluno | 5 | C | EPIC-8 | TEC-01 |
