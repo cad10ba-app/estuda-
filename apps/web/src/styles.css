@@ -44,3 +44,10 @@ h2 { font-size: 15px; margin: 20px 0 6px; text-transform: capitalize; color: var
 .mini { display: flex; flex-direction: column; align-items: flex-end; }
 .mini .link { min-height: 28px; }
 .tabs button { font-size: 13px; padding: 0 2px; }
+textarea { width: 100%; min-height: 72px; margin: 8px 0; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: var(--fg); padding: 10px; font: inherit; }
+.flash { display: grid; gap: 12px; margin: 16px 0; }
+.big-text { font-size: 20px; margin: 0; }
+.answer { padding-top: 12px; border-top: 1px dashed var(--border); color: var(--accent); }
+.add-toggle { width: 100%; margin: 8px 0; }
+button.link.inline { display: inline; min-height: 0; padding: 0 4px; }
+.flash .row button { padding: 0 4px; font-size: 14px; }

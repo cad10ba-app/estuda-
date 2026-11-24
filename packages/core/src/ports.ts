@@ -13,6 +13,21 @@ export interface StudySession {
   cycles: number;
 }
 
+/** Cartão de estudo com estado de repetição espaçada (REQ-012/013). */
+export interface Card {
+  id: string;
+  subjectId: string;
+  front: string;
+  back: string;
+  intervalDays: number;
+  ease: number;
+  repetitions: number;
+  /** Próxima revisão. */
+  due: Date;
+  lastReviewedAt?: Date;
+  lapses: number;
+}
+
 /** Relógio injetável (testes e fuso). */
 export interface Clock {
   now(): Date;
@@ -35,6 +50,9 @@ export interface StudyStore {
   saveWindows(windows: AvailabilityWindow[]): Promise<void>;
   saveSession(session: StudySession): Promise<void>;
   listSessions(): Promise<StudySession[]>;
+  saveCard(card: Card): Promise<void>;
+  listCards(): Promise<Card[]>;
+  deleteCard(id: string): Promise<void>;
   listPlan(): Promise<PlanBlock[]>;
   savePlan(blocks: PlanBlock[]): Promise<void>;
 }

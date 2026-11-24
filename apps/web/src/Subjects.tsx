@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Deadline, DeadlineKind, Subject } from '@estuda/engine';
 import { addDeadline, addSubject, removeDeadline, removeSubject, updateSubject } from '@estuda/core';
 import { deps } from './store';
+import { Availability } from './Availability';
 
 const KINDS: DeadlineKind[] = ['prova', 'entrega', 'simulado'];
 const fmtDate = (d: Date) => d.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
@@ -32,6 +33,7 @@ export function Subjects({ onChange }: { onChange: () => void }) {
   return (
     <main className="app">
       <h1>Disciplinas</h1>
+      <Availability onChange={onChange} />
       {error && <p className="warn">{error}</p>}
       <div className="row">
         <input value={name} placeholder="Nova disciplina" onChange={(e) => setName(e.target.value)} />

@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { PlanBlock, Subject } from '@estuda/engine';
-import { blocksForDay, daySummary, doneByBlock, isBlockDone, planToICS, planWeek } from '@estuda/core';
+import { blocksForDay, daySummary, doneByBlock, isBlockDone, planToICS, planWeek, reviewQueue } from '@estuda/core';
 import { deps } from './store';
 import { Onboarding } from './Onboarding';
 import { Subjects } from './Subjects';
 import { Plan } from './Plan';
+import { Review } from './Review';
 import { Focus, beginSession, loadActive, type ActiveSession } from './Focus';
 
 const TYPE_LABEL = { estudo: 'Estudo', revisao: 'Revisão', simulado: 'Simulado' } as const;
@@ -14,9 +15,10 @@ export function App() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [ready, setReady] = useState<'loading' | 'onboarding' | 'app'>('loading');
-  const [tab, setTab] = useState<'hoje' | 'plano' | 'foco' | 'disciplinas'>('hoje');
+  const [tab, setTab] = useState<'hoje' | 'plano' | 'foco' | 'revisar' | 'disciplinas'>('hoje');
   const [active, setActive] = useState<ActiveSession | null>(loadActive);
   const [done, setDone] = useState<Map<string, number>>(new Map());
+  const [dueCount, setDueCount] = useState(0);
   const [summary, setSummary] = useState({ plannedMin: 0, actualMin: 0 });
 
   const refresh = useCallback(async () => {
@@ -24,6 +26,7 @@ export function App() {
     setBlocks(await blocksForDay(deps));
     setDone(doneByBlock(await deps.store.listSessions()));
     setSummary(await daySummary(deps));
+    setDueCount((await reviewQueue(deps)).queue.length);
   }, []);
 
   const replan = useCallback(async () => {
@@ -60,11 +63,15 @@ export function App() {
       <button className={tab === 'hoje' ? 'on' : ''} onClick={() => { setTab('hoje'); void refresh(); }}>Hoje</button>
       <button className={tab === 'plano' ? 'on' : ''} onClick={() => setTab('plano')}>Plano</button>
       <button className={tab === 'foco' ? 'on' : ''} onClick={() => setTab('foco')}>Foco{active ? ' ●' : ''}</button>
+      <button className={tab === 'revisar' ? 'on' : ''} onClick={() => setTab('revisar')}>Revisar{dueCount > 0 ? ` (${dueCount})` : ''}</button>
       <button className={tab === 'disciplinas' ? 'on' : ''} onClick={() => setTab('disciplinas')}>Disciplinas</button>
     </nav>
   );
   if (tab === 'plano') {
     return <><Plan onChange={refresh} />{nav}</>;
+  }
+  if (tab === 'revisar') {
+    return <><Review onChange={refresh} />{nav}</>;
   }
   if (tab === 'foco') {
     return <><Focus active={active} subjects={subjects} onChange={setActive} onFinished={() => { void refresh(); setTab('hoje'); }} />{nav}</>;
@@ -83,6 +90,9 @@ export function App() {
         </p>
       </header>
 
+      {dueCount > 0 && (
+        <p className="card"><strong>{dueCount}</strong> revisão(ões) esperando. <button className="link inline" onClick={() => setTab('revisar')}>Revisar agora</button></p>
+      )}
       {warnings.map((w) => (
         <p key={w} className="warn">{w}</p>
       ))}
