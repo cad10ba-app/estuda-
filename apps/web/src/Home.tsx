@@ -3,7 +3,7 @@ import type { PlanBlock, Project, Subject, Topic } from '@estuda/engine';
 import { TECHNIQUE_BY_ID } from '@estuda/engine';
 import { blocksForDay, doneByBlock, dueTopicReviews, isBlockDone, markBlockMissed, prepareSession, reviewQueue, type PreparedSession } from '@estuda/core';
 import { deps } from './store';
-import { displayName } from './names';
+import { displayName, subjectColor } from './names';
 import type { Target } from './types';
 
 const hhmm = (d: Date) => d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -117,7 +117,7 @@ export function Home({ hasRun, onOpenSession, onOpenRun, onOpenReview }: {
       <ul className="blocks">
         {blocks.length === 0 && <li className="muted">Nenhum bloco para hoje.</li>}
         {blocks.map((b) => (
-          <li key={b.start.toISOString()} className={`block ${b.missed ? 'missed' : ''}`}>
+          <li key={b.start.toISOString()} className={`block ${b.missed ? 'missed' : ''}`} style={{ '--c': subjectColor(b.subjectId) } as React.CSSProperties}>
             <time>{hhmm(b.start)}</time>
             <div className="grow">
               <strong>{name(b.subjectId)}</strong>

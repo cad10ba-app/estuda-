@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Project, Subject } from '@estuda/engine';
-import { displayName } from './names';
+import { displayName, subjectColor } from './names';
 import { applyRetrospective, learningSummary, suggestionsFor, weeklyReport, type LearningSummary, type RetrospectiveAnswers, type WeeklyReport } from '@estuda/core';
 import { deps } from './store';
 
@@ -70,7 +70,7 @@ export function Progress({ onChange }: { onChange: () => void }) {
         return (
           <div key={s.subjectId} className="bar-row">
             <div className="row between"><span>{name(s.subjectId)}</span><span className="muted">{s.actualMin}/{s.plannedMin} min</span></div>
-            <div className="bar" role="img" aria-label={`${Math.round(ratio * 100)}% do planejado`}><div style={{ width: pct(ratio) }} /></div>
+            <div className="bar" role="img" aria-label={`${Math.round(ratio * 100)}% do planejado`}><div style={{ width: pct(ratio), background: subjectColor(s.subjectId) }} /></div>
           </div>
         );
       })}

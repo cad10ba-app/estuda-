@@ -4,12 +4,14 @@ import { DEFAULT_ACCESSIBILITY, LEVEL_LABEL, changeMode, planToICS, setAccessibi
 import { deps } from './store';
 import { Availability } from './Availability';
 import { Privacy } from './Privacy';
+import { getTheme, setTheme, type Theme } from './theme';
 
 const AUTONOMY_LABEL: Record<Autonomy, string> = { guiada: 'Guiada', media: 'Média', alta: 'Alta' };
 
 export function Profile({ onChange }: { onChange: () => void }) {
   const [profile, setProfile] = useState<ProfileT | null>(null);
   const [error, setError] = useState('');
+  const [theme, setThemeState] = useState<Theme>(getTheme());
   const load = async () => setProfile((await deps.store.getProfile()) ?? null);
   useEffect(() => { void load(); }, []);
 
@@ -52,7 +54,12 @@ export function Profile({ onChange }: { onChange: () => void }) {
       <Availability onChange={onChange} />
 
       <section className="card">
-        <strong>Acessibilidade</strong>
+        <strong>Aparência e acessibilidade</strong>
+        <label>Tema
+          <select value={theme} onChange={(e) => { const t = e.target.value as Theme; setTheme(t); setThemeState(t); }}>
+            <option value="auto">Automático (segue o aparelho)</option><option value="light">Claro</option><option value="dark">Escuro</option>
+          </select>
+        </label>
         <label>Tamanho do texto
           <select value={a11y.fontScale} onChange={(e) => run(() => setAccessibility(deps, { fontScale: +e.target.value }))}>
             <option value={1}>Padrão</option><option value={1.15}>Grande</option><option value={1.3}>Muito grande</option>

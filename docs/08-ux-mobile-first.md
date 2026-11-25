@@ -39,3 +39,11 @@ Sequência com "congelamento" semanal (evita culpa), conquistas por hábitos (n�
 
 ## Design system
 Tokens de cor/tipografia/espaçamento em `packages/ui`; cor por disciplina; componentes: Card de bloco, Timer, Cartão flip, Linha do tempo de marcos, Gráfico de aderência.
+
+## Identidade visual e temas (atualização)
+- **Logo:** livro aberto com uma faísca (ideia), em degradê índigo→violeta (`apps/web/public/favicon.svg`; ícones PWA em PNG gerados a partir dele, incluindo versão *maskable*).
+- **Tema claro e escuro:** variáveis CSS em `apps/web/src/styles.css`. O padrão segue o aparelho; o botão da barra superior alterna claro/escuro e *Perfil → Tema* permite escolher Automático, Claro ou Escuro (salvo em `localStorage`, aplicado antes da renderização para não piscar).
+- **Hierarquia de botões:** primário (degradê), secundário (tonal), link (texto). Uma ação principal por tela.
+- **Cor por disciplina:** cada disciplina/projeto tem uma cor estável (`subjectColor`), usada nas faixas dos blocos e nas barras de progresso.
+- **Navegação:** barra inferior com ícones vetoriais; item ativo com destaque.
+- **Acessibilidade:** alto contraste, tamanho do texto e redução de animações continuam em *Perfil*; contraste do texto sobre o degradê verificado para os dois temas.

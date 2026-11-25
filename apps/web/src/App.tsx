@@ -11,19 +11,21 @@ import { Techniques } from './Techniques';
 import { Progress } from './Progress';
 import { Profile } from './Profile';
 import { Review } from './Review';
+import { AppBar } from './AppBar';
+import { Icon, type IconName } from './Icon';
 import { SessionSetup } from './SessionSetup';
 import { SessionRunner, loadRun, saveRun } from './SessionRun';
 import type { Tab, Target } from './types';
 
 type Overlay = null | { kind: 'setup'; target: Target } | { kind: 'run' } | { kind: 'review' };
 
-const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: 'inicio', label: 'Início', icon: '🏠' },
-  { id: 'plano', label: 'Meu plano', icon: '🗓️' },
-  { id: 'conteudos', label: 'Conteúdos', icon: '📚' },
-  { id: 'tecnicas', label: 'Técnicas', icon: '🧠' },
-  { id: 'progresso', label: 'Progresso', icon: '📈' },
-  { id: 'perfil', label: 'Perfil', icon: '⚙️' },
+const TABS: { id: Tab; label: string; icon: IconName }[] = [
+  { id: 'inicio', label: 'Início', icon: 'home' },
+  { id: 'plano', label: 'Plano', icon: 'calendar' },
+  { id: 'conteudos', label: 'Conteúdos', icon: 'book' },
+  { id: 'tecnicas', label: 'Técnicas', icon: 'bulb' },
+  { id: 'progresso', label: 'Progresso', icon: 'chart' },
+  { id: 'perfil', label: 'Perfil', icon: 'user' },
 ];
 
 export function App() {
@@ -88,6 +90,7 @@ export function App() {
 
   return (
     <>
+      <AppBar />
       {tab === 'inicio' && (
         <Home key={version} hasRun={!!run} onOpenSession={open} onOpenRun={() => setOverlay({ kind: 'run' })} onOpenReview={() => setOverlay({ kind: 'review' })} />
       )}
@@ -99,7 +102,7 @@ export function App() {
       <nav className="tabs" aria-label="Navegação principal">
         {TABS.map((t) => (
           <button key={t.id} className={tab === t.id ? 'on' : ''} aria-current={tab === t.id ? 'page' : undefined} onClick={() => go(t.id)}>
-            <span aria-hidden="true">{t.icon}</span>
+            <span className="ico"><Icon name={t.icon} size={20} /></span>
             <span>{t.label}{t.id === 'inicio' && run ? ' ●' : ''}</span>
           </button>
         ))}
