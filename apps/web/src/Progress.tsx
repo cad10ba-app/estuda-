@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Project, Subject } from '@estuda/engine';
 import { displayName } from './names';
-import { applyRetrospective, suggestionsFor, weeklyReport, type RetrospectiveAnswers, type WeeklyReport } from '@estuda/core';
+import { applyRetrospective, learningSummary, suggestionsFor, weeklyReport, type LearningSummary, type RetrospectiveAnswers, type WeeklyReport } from '@estuda/core';
 import { deps } from './store';
 
 const pct = (n: number) => `${Math.round(n * 100)}%`;
 
 export function Progress({ onChange }: { onChange: () => void }) {
   const [report, setReport] = useState<WeeklyReport | null>(null);
+  const [learn, setLearn] = useState<LearningSummary | null>(null);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [retro, setRetro] = useState(false);
@@ -17,6 +18,7 @@ export function Progress({ onChange }: { onChange: () => void }) {
 
   const refresh = useCallback(async () => {
     setReport(await weeklyReport(deps));
+    setLearn(await learningSummary(deps));
     setSubjects(await deps.store.listSubjects());
     setProjects(await deps.store.listProjects());
   }, []);
@@ -44,6 +46,22 @@ export function Progress({ onChange }: { onChange: () => void }) {
         <div className="stat"><strong>{report.actualMin}</strong><span>de {report.plannedMin} min</span></div>
         <div className="stat"><strong>{report.cardsReviewed}</strong><span>cartões revisados</span></div>
       </div>
+
+      {learn && (
+        <>
+          <h2>Atividade, desempenho, percepção e progresso</h2>
+          <p className="muted">Tempo de estudo não prova aprendizagem: veja as quatro dimensões separadas.</p>
+          <div className="stats">
+            <div className="stat"><strong>{learn.activity.sessions}</strong><span>Atividade: sessões ({learn.activity.minutes} min)</span></div>
+            <div className="stat"><strong>{learn.performance.accuracy === null ? '—' : pct(learn.performance.accuracy)}</strong><span>Desempenho: acertos{learn.performance.answered ? ` (${learn.performance.answered} questões)` : ''}</span></div>
+            <div className="stat"><strong>{learn.perception.confidence === null ? '—' : learn.perception.confidence.toFixed(1)}</strong><span>Percepção: confiança (1–5){learn.perception.difficulty !== null ? ` · dificuldade ${learn.perception.difficulty.toFixed(1)}` : ''}</span></div>
+            <div className="stat"><strong>{learn.progress.tasksDone}/{learn.progress.tasksTotal}</strong><span>Progresso: tarefas · {learn.progress.topicsSeen}/{learn.progress.topicsTotal} tópicos vistos</span></div>
+          </div>
+          <p className="muted">
+            Recomendações na semana: {learn.recommendations.recomendada} aceitas, {learn.recommendations.trocada} trocadas, {learn.recommendations.personalizada} personalizadas · {learn.reviews.pending} revisão(ões) pendente(s).
+          </p>
+        </>
+      )}
 
       <h2>Por disciplina</h2>
       {report.bySubject.length === 0 && <p className="muted">Sem dados ainda.</p>}

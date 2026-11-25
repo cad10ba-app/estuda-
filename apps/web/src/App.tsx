@@ -1,49 +1,51 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { PlanBlock, Project, Subject, Topic } from '@estuda/engine';
-import { blocksForDay, daySummary, doneByBlock, isBlockDone, planToICS, planWeek, reviewQueue, dueTopicReviews } from '@estuda/core';
+import type { Project, Subject } from '@estuda/engine';
+import { DEFAULT_ACCESSIBILITY, type SessionRun } from '@estuda/core';
 import { deps } from './store';
-import { Onboarding } from './Onboarding';
-import { Subjects } from './Subjects';
-import { Plan } from './Plan';
-import { Review } from './Review';
-import { Progress } from './Progress';
-import { Projects } from './Projects';
-import { More, type MoreScreen } from './More';
-import { Privacy } from './Privacy';
 import { displayName } from './names';
-import { Focus, beginSession, loadActive, type ActiveSession } from './Focus';
+import { Onboarding } from './Onboarding';
+import { Home } from './Home';
+import { Plan } from './Plan';
+import { Content } from './Content';
+import { Techniques } from './Techniques';
+import { Progress } from './Progress';
+import { Profile } from './Profile';
+import { Review } from './Review';
+import { SessionSetup } from './SessionSetup';
+import { SessionRunner, loadRun, saveRun } from './SessionRun';
+import type { Tab, Target } from './types';
 
-const TYPE_LABEL = { estudo: 'Estudo', revisao: 'Revisão', simulado: 'Simulado', escrita: 'Escrita' } as const;
+type Overlay = null | { kind: 'setup'; target: Target } | { kind: 'run' } | { kind: 'review' };
+
+const TABS: { id: Tab; label: string; icon: string }[] = [
+  { id: 'inicio', label: 'Início', icon: '🏠' },
+  { id: 'plano', label: 'Meu plano', icon: '🗓️' },
+  { id: 'conteudos', label: 'Conteúdos', icon: '📚' },
+  { id: 'tecnicas', label: 'Técnicas', icon: '🧠' },
+  { id: 'progresso', label: 'Progresso', icon: '📈' },
+  { id: 'perfil', label: 'Perfil', icon: '⚙️' },
+];
 
 export function App() {
-  const [blocks, setBlocks] = useState<PlanBlock[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [warnings, setWarnings] = useState<string[]>([]);
   const [ready, setReady] = useState<'loading' | 'onboarding' | 'app'>('loading');
-  const [tab, setTab] = useState<'hoje' | 'plano' | 'foco' | 'revisar' | 'mais'>('hoje');
-  const [active, setActive] = useState<ActiveSession | null>(loadActive);
-  const [done, setDone] = useState<Map<string, number>>(new Map());
-  const [dueCount, setDueCount] = useState(0);
-  const [topics, setTopics] = useState<Topic[]>([]);
+  const [tab, setTab] = useState<Tab>('inicio');
+  const [overlay, setOverlay] = useState<Overlay>(null);
+  const [run, setRun] = useState<SessionRun | null>(loadRun);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [more, setMore] = useState<MoreScreen>('menu');
-  const [summary, setSummary] = useState({ plannedMin: 0, actualMin: 0 });
+  const [version, setVersion] = useState(0);
 
   const refresh = useCallback(async () => {
     setSubjects(await deps.store.listSubjects());
-    setBlocks(await blocksForDay(deps));
-    setDone(doneByBlock(await deps.store.listSessions()));
-    setSummary(await daySummary(deps));
-    setDueCount((await reviewQueue(deps)).queue.length + (await dueTopicReviews(deps)).length);
-    setTopics(await deps.store.listTopics());
     setProjects(await deps.store.listProjects());
+    const p = await deps.store.getProfile();
+    const a = { ...DEFAULT_ACCESSIBILITY, ...p?.accessibility };
+    const root = document.documentElement;
+    root.style.fontSize = `${16 * a.fontScale}px`;
+    root.dataset.contrast = a.highContrast ? 'high' : 'normal';
+    root.dataset.motion = a.reduceMotion ? 'reduce' : 'normal';
+    setVersion((v) => v + 1);
   }, []);
-
-  const replan = useCallback(async () => {
-    const r = await planWeek(deps);
-    setWarnings(r.warnings);
-    await refresh();
-  }, [refresh]);
 
   useEffect(() => {
     (async () => {
@@ -55,97 +57,53 @@ export function App() {
 
   const name = (id: string) => displayName(id, subjects, projects);
 
-  const exportIcs = async () => {
-    const ics = planToICS(await deps.store.listPlan(), subjects);
-    const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
-    const a = Object.assign(document.createElement('a'), { href: url, download: 'estuda.ics' });
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
   if (ready === 'loading') return <main className="app"><p className="muted">Carregando…</p></main>;
-  if (ready === 'onboarding') {
-    return <Onboarding onDone={async () => { await refresh(); setReady('app'); }} />;
-  }
+  if (ready === 'onboarding') return <Onboarding onDone={async () => { await refresh(); setReady('app'); }} />;
 
-  const go = (t: typeof tab) => { setTab(t); if (t === 'mais') setMore('menu'); void refresh(); };
-  const nav = (
-    <nav className="tabs">
-      <button className={tab === 'hoje' ? 'on' : ''} onClick={() => go('hoje')}>Hoje</button>
-      <button className={tab === 'plano' ? 'on' : ''} onClick={() => go('plano')}>Plano</button>
-      <button className={tab === 'foco' ? 'on' : ''} onClick={() => go('foco')}>Foco{active ? ' ●' : ''}</button>
-      <button className={tab === 'revisar' ? 'on' : ''} onClick={() => go('revisar')}>Revisar{dueCount > 0 ? ` (${dueCount})` : ''}</button>
-      <button className={tab === 'mais' ? 'on' : ''} onClick={() => go('mais')}>Mais</button>
-    </nav>
-  );
-  if (tab === 'plano') {
-    return <><Plan onChange={refresh} />{nav}</>;
-  }
-  if (tab === 'revisar') {
-    return <><Review onChange={refresh} />{nav}</>;
-  }
-  if (tab === 'foco') {
-    return <><Focus active={active} subjects={subjects} nameOf={name} onChange={setActive} onFinished={() => { void refresh(); setTab('hoje'); }} />{nav}</>;
-  }
-  if (tab === 'mais') {
-    const back = <button className="link back" onClick={() => setMore('menu')}>‹ Mais</button>;
+  const setRunPersist = (r: SessionRun | null) => { saveRun(r); setRun(r); };
+
+  if (overlay?.kind === 'setup') {
     return (
-      <>
-        {more === 'menu' && <More onPick={setMore} />}
-        {more === 'progresso' && <>{back}<Progress onChange={refresh} /></>}
-        {more === 'projetos' && <>{back}<Projects onChange={refresh} /></>}
-        {more === 'privacidade' && <>{back}<Privacy /></>}
-        {more === 'disciplinas' && <>{back}<Subjects onChange={refresh} /></>}
-        {nav}
-      </>
+      <SessionSetup
+        target={overlay.target} subjectName={name(overlay.target.subjectId)}
+        onBack={() => setOverlay(null)}
+        onStart={(r) => { setRunPersist(r); setOverlay({ kind: 'run' }); }}
+      />
     );
   }
+  if (overlay?.kind === 'run' && run) {
+    return (
+      <SessionRunner
+        run={run} subjectName={name(run.subjectId)} onChange={setRunPersist}
+        onClose={() => { setOverlay(null); void refresh(); }}
+      />
+    );
+  }
+  if (overlay?.kind === 'review') {
+    return <Review onChange={refresh} onBack={() => { setOverlay(null); void refresh(); }} />;
+  }
+
+  const go = (t: Tab) => { setTab(t); void refresh(); };
+  const open = (target: Target) => setOverlay({ kind: 'setup', target });
 
   return (
     <>
-    <main className="app">
-      <header>
-        <h1>Hoje</h1>
-        <p className="muted">
-          Hoje: {summary.actualMin} de {summary.plannedMin} min planejados
-        </p>
-      </header>
-
-      {dueCount > 0 && (
-        <p className="card"><strong>{dueCount}</strong> revisão(ões) esperando. <button className="link inline" onClick={() => setTab('revisar')}>Revisar agora</button></p>
+      {tab === 'inicio' && (
+        <Home key={version} hasRun={!!run} onOpenSession={open} onOpenRun={() => setOverlay({ kind: 'run' })} onOpenReview={() => setOverlay({ kind: 'review' })} />
       )}
-      {warnings.map((w) => (
-        <p key={w} className="warn">{w}</p>
-      ))}
-
-      <ul className="blocks">
-        {blocks.length === 0 && <li className="muted">Nenhum bloco para hoje.</li>}
-        {blocks.map((b) => (
-          <li key={b.start.toISOString()} className={`block ${b.missed ? 'missed' : ''}`}>
-            <time>
-              {b.start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-            </time>
-            <div className="grow">
-              <strong>{name(b.subjectId)}</strong>
-              {b.topicId && <span> — {topics.find((t) => t.id === b.topicId)?.title}</span>}
-              <span className="muted"> · {TYPE_LABEL[b.type]} · {b.durationMin} min{b.missed ? ' · perdido' : ''}</span>
-              {(done.get(b.start.toISOString()) ?? 0) > 0 && (
-                <div className="muted">{isBlockDone(b, done) ? '✓ ' : ''}{done.get(b.start.toISOString())} min feitos</div>
-              )}
-            </div>
-            {!isBlockDone(b, done) && !b.missed && (
-              <button className="link" onClick={async () => { setActive(await beginSession(b.subjectId, b)); setTab('foco'); }}>Iniciar</button>
-            )}
-          </li>
+      {tab === 'plano' && <Plan onChange={refresh} onOpenSession={open} />}
+      {tab === 'conteudos' && <Content onChange={refresh} />}
+      {tab === 'tecnicas' && <Techniques />}
+      {tab === 'progresso' && <Progress onChange={refresh} />}
+      {tab === 'perfil' && <Profile onChange={refresh} />}
+      <nav className="tabs" aria-label="Navegação principal">
+        {TABS.map((t) => (
+          <button key={t.id} className={tab === t.id ? 'on' : ''} aria-current={tab === t.id ? 'page' : undefined} onClick={() => go(t.id)}>
+            <span aria-hidden="true">{t.icon}</span>
+            <span>{t.label}{t.id === 'inicio' && run ? ' ●' : ''}</span>
+          </button>
         ))}
-      </ul>
-
-      <footer className="actions">
-        <button onClick={replan}>Replanejar semana</button>
-        <button className="secondary" onClick={exportIcs}>Exportar agenda (.ics)</button>
-      </footer>
-    </main>
-    {nav}
+      </nav>
     </>
   );
 }

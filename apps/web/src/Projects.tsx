@@ -9,7 +9,7 @@ import { deps } from './store';
 const fmt = (d: Date) => d.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 const RISK_LABEL = { verde: '🟢 No ritmo', amarelo: '🟡 Atenção', vermelho: '🔴 Em risco' } as const;
 
-export function Projects({ onChange }: { onChange: () => void }) {
+export function Projects({ onChange, embedded }: { onChange: () => void; embedded?: boolean }) {
   const [list, setList] = useState<ProjectStatus[]>([]);
   const [refs, setRefs] = useState<Reference[]>([]);
   const [creating, setCreating] = useState(false);
@@ -36,10 +36,10 @@ export function Projects({ onChange }: { onChange: () => void }) {
     }
   };
 
+  const Wrap = embedded ? 'section' : 'main';
   return (
-    <main className="app">
-      <h1>Projetos</h1>
-      <p className="muted">TCC, dissertação, tese ou artigo, com marcos e metas de escrita.</p>
+    <Wrap className={embedded ? undefined : 'app'}>
+      <p className="muted">TCC, dissertação, tese ou artigo, com etapas e metas de escrita.</p>
       {error && <p className="warn">{error}</p>}
       {info && <p className="warn">{info}</p>}
 
@@ -54,7 +54,7 @@ export function Projects({ onChange }: { onChange: () => void }) {
       ) : (
         <button className="add-toggle" onClick={() => setCreating(true)}>+ Novo projeto</button>
       )}
-    </main>
+    </Wrap>
   );
 }
 

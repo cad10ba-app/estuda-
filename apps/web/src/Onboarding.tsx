@@ -1,13 +1,23 @@
 import { useState } from 'react';
-import type { Level } from '@estuda/engine';
-import { LEVEL_LABEL, PERIODS, SUGGESTED_SUBJECTS, completeOnboarding, type Period } from '@estuda/core';
+import type { Autonomy, Level } from '@estuda/engine';
+import { DEFAULT_AUTONOMY, GOAL_LABEL, LEVEL_LABEL, PERIODS, SUGGESTED_SUBJECTS, completeOnboarding, type GoalType, type Period } from '@estuda/core';
 import { deps } from './store';
 
 const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const AUTONOMY_LABEL: Record<Autonomy, string> = {
+  guiada: 'Guiada — passo a passo, sessões mais curtas',
+  media: 'Média — sugestões com alguma liberdade',
+  alta: 'Alta — eu decido, o app apoia',
+};
+const STEPS = 5;
 
 export function Onboarding({ onDone }: { onDone: () => void }) {
   const [step, setStep] = useState(0);
   const [level, setLevel] = useState<Level | null>(null);
+  const [goalType, setGoalType] = useState<GoalType>('rotina');
+  const [goalTitle, setGoalTitle] = useState('');
+  const [deadline, setDeadline] = useState('');
+  const [autonomy, setAutonomy] = useState<Autonomy>('media');
   const [subjects, setSubjects] = useState<string[]>([]);
   const [draft, setDraft] = useState('');
   const [days, setDays] = useState<number[]>([1, 2, 3, 4, 5]);
@@ -15,10 +25,11 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   const [error, setError] = useState('');
 
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
-
   const pickLevel = (l: Level) => {
     setLevel(l);
+    setAutonomy(DEFAULT_AUTONOMY[l]);
     setSubjects(SUGGESTED_SUBJECTS[l]);
+    setGoalType(l === 'pos' ? 'projeto' : l === 'livre' ? 'concurso' : l === 'medio' ? 'prova' : 'rotina');
     setStep(1);
   };
   const addDraft = () => {
@@ -28,20 +39,30 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   };
   const finish = async () => {
     try {
-      await completeOnboarding(deps, { level: level!, subjectNames: subjects, weekdays: days, periods });
+      await completeOnboarding(deps, {
+        level: level!, autonomy, subjectNames: subjects, weekdays: days, periods,
+        goal: goalTitle.trim() ? { type: goalType, title: goalTitle, deadline: deadline || undefined } : undefined,
+      });
       onDone();
     } catch (e) {
       setError((e as Error).message);
     }
   };
 
+  const nav = (back: number, next: () => void, disabled = false, label = 'Continuar') => (
+    <div className="row">
+      <button className="secondary" onClick={() => setStep(back)}>Voltar</button>
+      <button disabled={disabled} onClick={next}>{label}</button>
+    </div>
+  );
+
   return (
     <main className="app">
-      <p className="muted">Passo {step + 1} de 3</p>
+      <p className="muted">Passo {step + 1} de {STEPS}</p>
       {step === 0 && (
         <section>
-          <h1>Qual é o seu nível?</h1>
-          <p className="muted">Usamos isso para ajustar a duração das sessões e as técnicas sugeridas.</p>
+          <h1>Como você vai usar o Estuda?</h1>
+          <p className="muted">Isso ajusta as sessões, a linguagem e as sugestões. Você pode mudar depois.</p>
           <div className="stack">
             {(Object.keys(LEVEL_LABEL) as Level[]).map((l) => (
               <button key={l} className="secondary big" onClick={() => pickLevel(l)}>{LEVEL_LABEL[l]}</button>
@@ -51,7 +72,35 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
       )}
       {step === 1 && (
         <section>
-          <h1>Suas disciplinas</h1>
+          <h1>Qual é o seu objetivo?</h1>
+          <label>Tipo
+            <select value={goalType} onChange={(e) => setGoalType(e.target.value as GoalType)}>
+              {(Object.keys(GOAL_LABEL) as GoalType[]).map((g) => <option key={g} value={g}>{GOAL_LABEL[g]}</option>)}
+            </select>
+          </label>
+          <label>Nome do objetivo (opcional)
+            <input value={goalTitle} placeholder="Ex.: ENEM, prova de Biologia, TCC" onChange={(e) => setGoalTitle(e.target.value)} />
+          </label>
+          <label>Prazo (opcional)
+            <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
+          </label>
+          {nav(0, () => setStep(2))}
+        </section>
+      )}
+      {step === 2 && (
+        <section>
+          <h1>Quanta orientação você quer?</h1>
+          <div className="stack">
+            {(Object.keys(AUTONOMY_LABEL) as Autonomy[]).map((a) => (
+              <button key={a} className={`big ${autonomy === a ? '' : 'secondary'}`} onClick={() => setAutonomy(a)}>{AUTONOMY_LABEL[a]}</button>
+            ))}
+          </div>
+          {nav(1, () => setStep(3))}
+        </section>
+      )}
+      {step === 3 && (
+        <section>
+          <h1>Suas disciplinas ou áreas</h1>
           <div className="chips">
             {subjects.map((s) => (
               <button key={s} className="chip on" onClick={() => setSubjects(subjects.filter((x) => x !== s))}>{s} ✕</button>
@@ -62,13 +111,10 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
             <input value={draft} placeholder="Nova disciplina" onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addDraft()} />
             <button className="secondary" onClick={addDraft}>Adicionar</button>
           </div>
-          <div className="row">
-            <button className="secondary" onClick={() => setStep(0)}>Voltar</button>
-            <button disabled={subjects.length === 0} onClick={() => setStep(2)}>Continuar</button>
-          </div>
+          {nav(2, () => setStep(4), subjects.length === 0)}
         </section>
       )}
-      {step === 2 && (
+      {step === 4 && (
         <section>
           <h1>Quando você estuda?</h1>
           <div className="chips">
@@ -82,10 +128,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
             ))}
           </div>
           {error && <p className="warn">{error}</p>}
-          <div className="row">
-            <button className="secondary" onClick={() => setStep(1)}>Voltar</button>
-            <button disabled={days.length === 0 || periods.length === 0} onClick={finish}>Gerar meu plano</button>
-          </div>
+          {nav(3, finish, days.length === 0 || periods.length === 0, 'Gerar meu plano')}
         </section>
       )}
     </main>

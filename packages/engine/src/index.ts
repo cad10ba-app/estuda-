@@ -5,3 +5,5 @@ export * from './planner';
 export * from './sm2';
 export * from './reviews';
 export * from './projects';
+export * from './techniques';
+export * from './recommendation';

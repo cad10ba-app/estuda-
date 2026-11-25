@@ -8,16 +8,16 @@ export const EXPORT_VERSION = 1;
  */
 export async function exportData(deps: Deps) {
   const s = deps.store;
-  const [profile, subjects, deadlines, windows, plan, sessions, cards, topics, topicReviews, projects, milestones, writingLogs, references] =
+  const [profile, subjects, deadlines, windows, plan, sessions, cards, topics, topicReviews, projects, milestones, writingLogs, references, goals, tasks] =
     await Promise.all([
       s.getProfile(), s.listSubjects(), s.listDeadlines(), s.listWindows(), s.listPlan(), s.listSessions(), s.listCards(),
-      s.listTopics(), s.listTopicReviews(), s.listProjects(), s.listMilestones(), s.listWritingLogs(), s.listReferences(),
+      s.listTopics(), s.listTopicReviews(), s.listProjects(), s.listMilestones(), s.listWritingLogs(), s.listReferences(), s.listGoals(), s.listTasks(),
     ]);
   return {
     app: 'estuda',
     version: EXPORT_VERSION,
     exportedAt: deps.clock.now().toISOString(),
-    data: { profile, subjects, deadlines, windows, plan, sessions, cards, topics, topicReviews, projects, milestones, writingLogs, references },
+    data: { profile, subjects, deadlines, windows, plan, sessions, cards, topics, topicReviews, projects, milestones, writingLogs, references, goals, tasks },
   };
 }
 

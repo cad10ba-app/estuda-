@@ -10,7 +10,7 @@ const GRADES: { g: ReviewGrade; label: string }[] = [
   { g: 'facil', label: 'Fácil' },
 ];
 
-export function Review({ onChange }: { onChange: () => void }) {
+export function Review({ onChange, onBack }: { onChange: () => void; onBack?: () => void }) {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [queue, setQueue] = useState<Card[]>([]);
   const [topicDue, setTopicDue] = useState<DueTopicReview[]>([]);
@@ -60,7 +60,8 @@ export function Review({ onChange }: { onChange: () => void }) {
 
   return (
     <main className="app">
-      <h1>Revisar</h1>
+      {onBack && <button className="link back" onClick={onBack}>‹ Voltar</button>}
+      <h1>Revisões</h1>
       <p className="muted">
         {stats.dueTotal} vencido(s) · {stats.reviewedToday} revisado(s) hoje · {total} cartão(ões)
       </p>
