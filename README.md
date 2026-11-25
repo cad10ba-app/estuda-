@@ -18,6 +18,8 @@ App que organiza o estudo de alunos do **Ensino Fundamental II (anos finais), En
 | 09 | [Roadmap e MVP](docs/09-roadmap-mvp.md) | Épicos `EPIC-x`, fases, backlog |
 | 10 | [Riscos e perguntas abertas](docs/10-riscos-e-perguntas-abertas.md) | Decisões pendentes |
 | 11 | [Deploy do PWA](docs/11-deploy.md) | Publicação no GitHub Pages e instalação no celular |
+| 12 | [Arquitetura funcional (referência de produto)](docs/12-estuda-arquitetura-funcional.md) | Documento que prevalece sobre os demais |
+| 13 | [Plano de adequação](docs/13-plano-de-adequacao.md) | Mapeamento doc 12 × aplicação e etapas |
 
 ## Convenções
 - Idioma: pt-BR. IDs rastreáveis: `TEC-xx` (técnica), `REQ-xxx` (requisito), `EPIC-x` (épico), `ENT-xx` (entidade).
