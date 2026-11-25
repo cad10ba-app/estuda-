@@ -133,7 +133,7 @@ export function SessionRunner({ run, subjectName, onChange, onClose }: {
           : <button className="secondary" onClick={() => update(pause(run, Date.now()))}>Pausar</button>}
         {isLastStep(run)
           ? <button onClick={() => setPhase('assess')}>Finalizar</button>
-          : <button className={due ? '' : 'secondary'} onClick={() => update(nextStep(run, Date.now()))}>Próxima etapa</button>}
+          : <button onClick={() => update(nextStep(run, Date.now()))}>Próxima etapa</button>}
         <div className="row">
           <button className="secondary" onClick={() => setPhase('swap')}>Trocar técnica</button>
           <button className="secondary" onClick={() => setPhase('assess')}>Encerrar</button>

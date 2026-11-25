@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { PlanBlock, Project, Subject, Topic } from '@estuda/engine';
-import { displayName } from './names';
+import { displayName, subjectColor } from './names';
 import { freeSlots, groupByDay, markBlockMissed, moveBlock, setBlockLocked } from '@estuda/core';
 import { deps } from './store';
 import type { Target } from './types';
@@ -59,7 +59,7 @@ export function Plan({ onChange, onOpenSession }: { onChange: () => void; onOpen
               const t = b.start.getTime();
               const past = b.start < now;
               return (
-                <li key={t} className={`block ${b.missed ? 'missed' : ''}`}>
+                <li key={t} className={`block ${b.missed ? 'missed' : ''}`} style={{ '--c': subjectColor(b.subjectId) } as React.CSSProperties}>
                   <time>{hhmm(b.start)}</time>
                   <div className="grow">
                     <strong>{name(b.subjectId)}</strong>

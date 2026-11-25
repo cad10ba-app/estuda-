@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Autonomy, Level } from '@estuda/engine';
 import { DEFAULT_AUTONOMY, GOAL_LABEL, LEVEL_LABEL, PERIODS, SUGGESTED_SUBJECTS, completeOnboarding, type GoalType, type Period } from '@estuda/core';
 import { deps } from './store';
+import { Logo } from './Logo';
 
 const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const AUTONOMY_LABEL: Record<Autonomy, string> = {
@@ -58,9 +59,10 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
 
   return (
     <main className="app">
-      <p className="muted">Passo {step + 1} de {STEPS}</p>
+      <div className="progress-dots" aria-label={`Passo ${step + 1} de ${STEPS}`}>{Array.from({ length: STEPS }, (_, i) => <i key={i} className={i <= step ? 'on' : ''} />)}</div>
       {step === 0 && (
         <section>
+          <div className="welcome"><Logo size={72} /><div className="wordmark big-word">Estuda</div><p className="muted">Planeje, estude e revise com a técnica certa para cada momento.</p></div>
           <h1>Como você vai usar o Estuda?</h1>
           <p className="muted">Isso ajusta as sessões, a linguagem e as sugestões. Você pode mudar depois.</p>
           <div className="stack">
