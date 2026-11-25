@@ -1,6 +1,6 @@
 import type { PlanBlock } from '@estuda/engine';
 import type { Deps, StudySession } from './ports';
-import { startOfDayUTC } from './usecases';
+import { startOfDay, tzOffset } from './usecases';
 import { totalFocusMs, type TimerState } from './timer';
 import { markStudied } from './topics';
 
@@ -48,7 +48,7 @@ export function isBlockDone(block: PlanBlock, done: Map<string, number>): boolea
 
 /** Resumo do dia: planejado vs realizado (minutos). */
 export async function daySummary(deps: Deps, day: Date = deps.clock.now()) {
-  const from = startOfDayUTC(day).getTime();
+  const from = startOfDay(day, tzOffset(deps)).getTime();
   const [plan, sessions] = await Promise.all([deps.store.listPlan(), deps.store.listSessions()]);
   const inDay = (t: number) => t >= from && t < from + DAY_MS;
   return {

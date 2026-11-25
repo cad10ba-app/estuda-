@@ -1,6 +1,6 @@
 import { windowSlots, type PlanBlock } from '@estuda/engine';
 import type { Deps } from './ports';
-import { planWeek, startOfDayUTC } from './usecases';
+import { planStartInstant, planWeek, startOfDay, tzOffset } from './usecases';
 
 const DAY_MS = 86_400_000;
 const MIN_MS = 60_000;
@@ -21,8 +21,9 @@ export async function freeSlots(deps: Deps): Promise<Date[]> {
   if (!profile) return [];
   const [windows, plan] = await Promise.all([deps.store.listWindows(), deps.store.listPlan()]);
   const now = deps.clock.now().getTime();
-  const weekStart = startOfDayUTC(deps.clock.now());
-  return windowSlots(weekStart, profile, windows).filter(
+  const off = tzOffset(deps);
+  const weekStart = startOfDay(await planStartInstant(deps), off);
+  return windowSlots(weekStart, profile, windows, off).filter(
     (s) => s.getTime() >= now && !plan.some((b) => overlapsBlock(s.getTime(), profile.focusMin, b)),
   );
 }
@@ -44,9 +45,9 @@ export async function moveBlock(deps: Deps, from: Date, to: Date) {
   );
 }
 
-/** Agrupa blocos por dia (UTC), na ordem, para os próximos 7 dias a partir de hoje. */
-export function groupByDay(plan: PlanBlock[], today: Date): { day: Date; blocks: PlanBlock[] }[] {
-  const base = startOfDayUTC(today).getTime();
+/** Agrupa blocos por dia local, na ordem, para 7 dias a partir de `from` (início do plano ou hoje). */
+export function groupByDay(plan: PlanBlock[], from: Date, offsetMin = 0): { day: Date; blocks: PlanBlock[] }[] {
+  const base = startOfDay(from, offsetMin).getTime();
   return Array.from({ length: 7 }, (_, i) => {
     const day = new Date(base + i * DAY_MS);
     return {

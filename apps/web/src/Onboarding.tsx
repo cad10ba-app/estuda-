@@ -23,6 +23,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   const [draft, setDraft] = useState('');
   const [days, setDays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [periods, setPeriods] = useState<Period[]>(['noite']);
+  const [planStart, setPlanStart] = useState('');
   const [error, setError] = useState('');
 
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
@@ -41,7 +42,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   const finish = async () => {
     try {
       await completeOnboarding(deps, {
-        level: level!, autonomy, subjectNames: subjects, weekdays: days, periods,
+        level: level!, autonomy, subjectNames: subjects, weekdays: days, periods, planStart: planStart || undefined,
         goal: goalTitle.trim() ? { type: goalType, title: goalTitle, deadline: deadline || undefined } : undefined,
       });
       onDone();
@@ -129,6 +130,10 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
               <button key={p} className={`chip ${periods.includes(p) ? 'on' : ''}`} onClick={() => setPeriods(toggle(periods, p))}>{PERIODS[p].label}</button>
             ))}
           </div>
+          <label>Começar o plano em (opcional)
+            <input type="date" value={planStart} min={new Date().toLocaleDateString('en-CA')} onChange={(e) => setPlanStart(e.target.value)} />
+          </label>
+          <p className="muted">Sem data, o plano começa agora e usa só os horários que ainda não passaram.</p>
           {error && <p className="warn">{error}</p>}
           {nav(3, finish, days.length === 0 || periods.length === 0, 'Gerar meu plano')}
         </section>

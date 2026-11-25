@@ -21,6 +21,8 @@ export interface Profile {
   /** Nível de autonomia do estudante (doc 12 §3). */
   autonomy?: Autonomy;
   accessibility?: Accessibility;
+  /** Data (YYYY-MM-DD, horário local) a partir da qual o plano é gerado. Padrão: hoje. */
+  planStart?: string;
 }
 
 export interface Subject {
@@ -92,6 +94,8 @@ export interface PlanInput {
   locked?: PlanBlock[];
   /** Só gera blocos a partir deste instante (replanejamento no meio do dia). */
   from?: Date;
+  /** Minutos a leste do UTC (Brasil = -180). `weekStart` deve ser a meia-noite local. Padrão 0. */
+  tzOffsetMin?: number;
   /** Blocos perdidos a repor por disciplina (id → quantidade). */
   carryOver?: Record<string, number>;
   /** Blocos semanais reservados a projetos longos (id da disciplina sintética `project:<id>`). */

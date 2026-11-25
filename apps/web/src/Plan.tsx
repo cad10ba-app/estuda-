@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { PlanBlock, Project, Subject, Topic } from '@estuda/engine';
 import { displayName, subjectColor } from './names';
-import { freeSlots, groupByDay, markBlockMissed, moveBlock, setBlockLocked } from '@estuda/core';
+import { freeSlots, groupByDay, markBlockMissed, moveBlock, planStartInstant, setBlockLocked, tzOffset } from '@estuda/core';
 import { deps } from './store';
 import type { Target } from './types';
 
@@ -15,6 +15,7 @@ export function Plan({ onChange, onOpenSession }: { onChange: () => void; onOpen
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [from, setFrom] = useState<Date>(() => new Date());
   const [free, setFree] = useState<Date[]>([]);
   const [moving, setMoving] = useState<number | null>(null);
   const [message, setMessage] = useState('');
@@ -25,6 +26,7 @@ export function Plan({ onChange, onOpenSession }: { onChange: () => void; onOpen
     setTopics(await deps.store.listTopics());
     setProjects(await deps.store.listProjects());
     setFree(await freeSlots(deps));
+    setFrom(await planStartInstant(deps));
   }, []);
   useEffect(() => { void load(); }, [load]);
 
@@ -43,7 +45,7 @@ export function Plan({ onChange, onOpenSession }: { onChange: () => void; onOpen
 
   const name = (id: string) => displayName(id, subjects, projects);
   const now = deps.clock.now();
-  const days = groupByDay(plan, now);
+  const days = groupByDay(plan, from, tzOffset(deps));
 
   return (
     <main className="app">

@@ -1,7 +1,7 @@
 import type { Profile } from '@estuda/engine';
 import type { Deps } from './ports';
 import { doneByBlock, isBlockDone } from './sessions';
-import { planWeek, startOfDayUTC } from './usecases';
+import { planWeek, startOfDay, tzOffset } from './usecases';
 
 const DAY_MS = 86_400_000;
 
@@ -30,7 +30,8 @@ export interface WeeklyReport {
 /** REQ-026: relatório dos últimos 7 dias (hoje incluído). */
 export async function weeklyReport(deps: Deps): Promise<WeeklyReport> {
   const now = deps.clock.now();
-  const today = startOfDayUTC(now).getTime();
+  const off = tzOffset(deps);
+  const today = startOfDay(now, off).getTime();
   const from = new Date(today - 6 * DAY_MS);
   const [plan, sessions, cards] = await Promise.all([deps.store.listPlan(), deps.store.listSessions(), deps.store.listCards()]);
   const inWindow = (t: number) => t >= from.getTime() && t < today + DAY_MS;
@@ -48,7 +49,7 @@ export async function weeklyReport(deps: Deps): Promise<WeeklyReport> {
   for (const b of past) row(b.subjectId).plannedMin += b.durationMin;
   for (const s of winSessions) row(s.subjectId).actualMin += s.actualMin;
 
-  const studiedDays = new Set(sessions.map((s) => Math.floor(startOfDayUTC(s.startedAt).getTime() / DAY_MS)));
+  const studiedDays = new Set(sessions.map((s) => Math.floor(startOfDay(s.startedAt, off).getTime() / DAY_MS)));
   let d = Math.floor(today / DAY_MS);
   if (!studiedDays.has(d)) d -= 1;
   let streak = 0;
@@ -143,7 +144,7 @@ export interface LearningSummary {
 /** Doc 12 §5.8: separa atividade, desempenho, percepção e progresso. Janela: últimos 7 dias para sessões. */
 export async function learningSummary(deps: Deps): Promise<LearningSummary> {
   const now = deps.clock.now();
-  const from = startOfDayUTC(now).getTime() - 6 * DAY_MS;
+  const from = startOfDay(now, tzOffset(deps)).getTime() - 6 * DAY_MS;
   const [sessions, tasks, topics, milestones, reviews, cards] = await Promise.all([
     deps.store.listSessions(), deps.store.listTasks(), deps.store.listTopics(), deps.store.listMilestones(),
     deps.store.listTopicReviews(), deps.store.listCards(),

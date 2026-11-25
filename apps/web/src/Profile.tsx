@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Autonomy, Level, Profile as ProfileT } from '@estuda/engine';
-import { DEFAULT_ACCESSIBILITY, LEVEL_LABEL, changeMode, planToICS, setAccessibility, setAutonomy, setFocusMinutes } from '@estuda/core';
+import { DEFAULT_ACCESSIBILITY, LEVEL_LABEL, changeMode, planToICS, setAccessibility, setAutonomy, setFocusMinutes, setPlanStart } from '@estuda/core';
 import { deps } from './store';
 import { Availability } from './Availability';
 import { Privacy } from './Privacy';
@@ -52,6 +52,15 @@ export function Profile({ onChange }: { onChange: () => void }) {
       </section>
 
       <Availability onChange={onChange} />
+
+      <section className="card">
+        <strong>Início do plano</strong>
+        <p className="muted">O plano só usa horários a partir desta data. Deixe em branco para começar agora.</p>
+        <div className="row">
+          <input type="date" value={profile.planStart ?? ''} min={new Date().toLocaleDateString('en-CA')} onChange={(e) => run(() => setPlanStart(deps, e.target.value || undefined))} />
+          {profile.planStart && <button className="secondary" onClick={() => run(() => setPlanStart(deps, undefined))}>Hoje</button>}
+        </div>
+      </section>
 
       <section className="card">
         <strong>Aparência e acessibilidade</strong>

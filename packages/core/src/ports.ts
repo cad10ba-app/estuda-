@@ -110,6 +110,8 @@ export interface Reference {
 /** Relógio injetável (testes e fuso). */
 export interface Clock {
   now(): Date;
+  /** Minutos a leste do UTC no instante dado (Brasil = -180). Padrão 0 (UTC). */
+  offsetMin?(at: Date): number;
 }
 
 /**
