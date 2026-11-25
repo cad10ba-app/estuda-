@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_PROFILES } from '@estuda/engine';
-import { MemoryStore, addCard, gradeCard, reviewQueue, updateAvailability, windowsToSelection, completeOnboarding, type Deps } from '../src';
+import { MemoryStore, addCard, gradeCard, reviewQueue, setRetention, updateAvailability, windowsToSelection, completeOnboarding, type Deps } from '../src';
 
 const DAY = 86_400_000;
 function mk(t = Date.UTC(2026, 10, 24, 12)) {
@@ -11,13 +11,16 @@ function mk(t = Date.UTC(2026, 10, 24, 12)) {
 }
 
 describe('cartões e revisão espaçada', () => {
-  it('cartão novo entra na fila; resposta "bom" agenda D+1 e some da fila', async () => {
+  it('cartão novo entra na fila; resposta "bom" agenda pelo FSRS (4 dias) e some da fila', async () => {
     const { deps, clock } = mk();
     await deps.store.saveProfile(DEFAULT_PROFILES.medio);
     const c = await addCard(deps, { subjectId: 'mat', front: '2+2', back: '4' });
     expect((await reviewQueue(deps)).queue).toHaveLength(1);
     const r = await gradeCard(deps, c.id, 'bom');
-    expect(r.intervalDays).toBe(1);
+    expect(r.intervalDays).toBe(4);
+    expect(r.stability).toBeCloseTo(3.7145, 4);
+    expect((await reviewQueue(deps)).queue).toHaveLength(0);
+    clock.t += 3 * DAY;
     expect((await reviewQueue(deps)).queue).toHaveLength(0);
     clock.t += DAY;
     expect((await reviewQueue(deps)).queue).toHaveLength(1);
@@ -49,6 +52,54 @@ describe('cartões e revisão espaçada', () => {
     const { deps } = mk();
     await expect(addCard(deps, { subjectId: 'x', front: ' ', back: 'b' })).rejects.toThrow();
     await expect(gradeCard(deps, 'nope', 'bom')).rejects.toThrow();
+  });
+});
+
+describe('FSRS nos cartões', () => {
+  it('fácil agenda mais longe que bom; errar volta em 1 dia e conta lapso', async () => {
+    const { deps } = mk();
+    const a = await addCard(deps, { subjectId: 'm', front: 'a', back: 'b' });
+    const b = await addCard(deps, { subjectId: 'm', front: 'c', back: 'd' });
+    expect((await gradeCard(deps, a.id, 'facil')).intervalDays).toBe(14);
+    expect((await gradeCard(deps, b.id, 'errou')).intervalDays).toBe(1);
+    expect((await deps.store.listCards()).find((c) => c.id === b.id)?.lapses).toBe(1);
+  });
+
+  it('segunda revisão no prazo cresce o intervalo; retenção maior encurta, menor alonga', async () => {
+    const run = async (retention: number) => {
+      const { deps, clock } = mk();
+      await deps.store.saveProfile({ ...DEFAULT_PROFILES.medio, retention });
+      const c = await addCard(deps, { subjectId: 'm', front: 'a', back: 'b' });
+      const first = await gradeCard(deps, c.id, 'bom');
+      clock.t = first.due.getTime();
+      return { first: first.intervalDays, second: (await gradeCard(deps, c.id, 'bom')).intervalDays };
+    };
+    const normal = await run(0.9);
+    expect(normal.second).toBeGreaterThan(normal.first);
+    const strict = await run(0.95);
+    const loose = await run(0.85);
+    expect(strict.first).toBeLessThan(normal.first);
+    expect(loose.first).toBeGreaterThan(normal.first);
+  });
+
+  it('cartão antigo (SM-2) é migrado sem perder o intervalo', async () => {
+    const { deps, clock } = mk();
+    const old = await addCard(deps, { subjectId: 'm', front: 'a', back: 'b' });
+    const t0 = clock.t - 10 * DAY;
+    await deps.store.saveCard({ ...old, intervalDays: 10, ease: 2.5, repetitions: 3, lastReviewedAt: new Date(t0), due: new Date(clock.t) });
+    const r = await gradeCard(deps, old.id, 'bom');
+    expect(r.stability).toBeGreaterThan(10);
+    expect(r.intervalDays).toBeGreaterThan(10);
+    expect(r.difficulty).toBeDefined();
+  });
+
+  it('retenção fora de 80–95% é recusada', async () => {
+    const { deps } = mk();
+    await completeOnboarding(deps, { level: 'medio', subjectNames: ['M'], weekdays: [1], periods: ['noite'] });
+    await setRetention(deps, 0.93);
+    expect((await deps.store.getProfile())?.retention).toBe(0.93);
+    await expect(setRetention(deps, 0.99)).rejects.toThrow();
+    await expect(setRetention(deps, 0.5)).rejects.toThrow();
   });
 });
 

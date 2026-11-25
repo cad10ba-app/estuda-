@@ -1,4 +1,6 @@
 import { MVP_TECHNIQUES, TECHNIQUE_BY_ID, type TechniqueId } from './techniques';
+import { EVIDENCE, type TechniqueEvidence } from './evidence';
+import { personalize, type OutcomeRecord } from './personalization';
 import type { Autonomy, Level } from './types';
 
 /** Tipo de tarefa/contexto de estudo (doc 12 §5.4). */
@@ -30,6 +32,8 @@ export interface RecommendationContext {
   recentTechniques?: TechniqueId[];
   /** Técnicas habilitadas (padrão: as 4 do MVP). */
   enabled?: TechniqueId[];
+  /** Resultados de sessões passadas do próprio estudante (personalização). */
+  history?: OutcomeRecord[];
 }
 
 export type StepKind = 'recuperacao' | 'estudo' | 'pratica' | 'foco' | 'pausa' | 'reflexao' | 'revisao';
@@ -51,6 +55,10 @@ export interface Recommendation {
   steps: SessionStep[];
   verification: string;
   reviewSuggested: boolean;
+  /** Base científica das técnicas recomendadas (grau de evidência e fontes). */
+  evidence: TechniqueEvidence[];
+  /** A ordem principal/complementar foi ajustada pelos resultados do estudante. */
+  personalized: boolean;
 }
 
 /** Regras iniciais (doc 12 §5.4): ideal por contexto, antes de filtrar pelas técnicas habilitadas. */
@@ -100,11 +108,17 @@ export function recommend(ctx: RecommendationContext): Recommendation {
     }
   }
   let primary = resolved[0] ?? enabled[0]!;
-  let complementary = resolved.find((t) => t !== primary);
+  let complementary: TechniqueId | undefined = resolved.find((t) => t !== primary);
+
+  // Personalização pelos resultados do próprio estudante (só entre técnicas já permitidas pela regra).
+  let personalized = false;
+  const names = Object.fromEntries(Object.entries(TECHNIQUE_BY_ID).map(([k, t]) => [k, t.name]));
+  const adj = personalize(primary, complementary, ctx.history ?? [], ctx.taskKind, names);
+  if (adj.note) { primary = adj.primary; complementary = adj.complementary; justification.push(adj.note); personalized = true; }
 
   // Variar se a mesma técnica foi usada várias vezes seguidas sem pedir troca.
   const recent = ctx.recentTechniques ?? [];
-  if (recent.length >= 3 && recent.slice(-3).every((t) => t === primary) && complementary) {
+  if (!personalized && recent.length >= 3 && recent.slice(-3).every((t) => t === primary) && complementary) {
     [primary, complementary] = [complementary, primary];
     justification.push('Você usou a mesma técnica várias vezes seguidas; sugerimos experimentar outra abordagem.');
   }
@@ -123,6 +137,8 @@ export function recommend(ctx: RecommendationContext): Recommendation {
     steps: buildSteps(primary, durationMin, complementary),
     verification: TECHNIQUE_BY_ID[primary].verification,
     reviewSuggested,
+    evidence: [primary, ...(complementary ? [complementary] : [])].map((t) => EVIDENCE[t]),
+    personalized,
   };
 }
 

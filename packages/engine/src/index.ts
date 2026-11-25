@@ -7,3 +7,6 @@ export * from './reviews';
 export * from './projects';
 export * from './techniques';
 export * from './recommendation';
+export * from './fsrs';
+export * from './evidence';
+export * from './personalization';

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Autonomy, Level, Profile as ProfileT } from '@estuda/engine';
-import { DEFAULT_ACCESSIBILITY, LEVEL_LABEL, changeMode, planToICS, setAccessibility, setAutonomy, setFocusMinutes, setPlanStart } from '@estuda/core';
+import { DEFAULT_ACCESSIBILITY, LEVEL_LABEL, changeMode, planToICS, setAccessibility, setAutonomy, setFocusMinutes, setPlanStart, setRetention } from '@estuda/core';
 import { deps } from './store';
 import { Availability } from './Availability';
 import { Privacy } from './Privacy';
@@ -49,6 +49,10 @@ export function Profile({ onChange }: { onChange: () => void }) {
         <label>Duração do bloco de foco: {profile.focusMin} min
           <input type="range" min={10} max={120} step={5} value={profile.focusMin} onChange={(e) => run(() => setFocusMinutes(deps, +e.target.value))} />
         </label>
+        <label>Retenção desejada nas revisões: {Math.round((profile.retention ?? 0.9) * 100)}%
+          <input type="range" min={80} max={95} step={1} value={Math.round((profile.retention ?? 0.9) * 100)} onChange={(e) => run(() => setRetention(deps, +e.target.value / 100))} />
+        </label>
+        <p className="muted">Mais alta = revisões mais frequentes. O agendamento usa o algoritmo FSRS.</p>
       </section>
 
       <Availability onChange={onChange} />

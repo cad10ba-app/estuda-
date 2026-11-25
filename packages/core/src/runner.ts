@@ -1,4 +1,4 @@
-import type { SessionStep, TechniqueId } from '@estuda/engine';
+import type { SessionStep, TaskKind, TechniqueId } from '@estuda/engine';
 import type { Assessment, ChoiceMode, Deps, StudySession } from './ports';
 import type { PreparedSession } from './assisted';
 import { buildSteps } from '@estuda/engine';
@@ -15,6 +15,7 @@ export interface SessionRun {
   subjectId: string;
   topicId?: string;
   taskId?: string;
+  taskKind?: TaskKind;
   blockStart?: number;
   technique: TechniqueId;
   recommended: TechniqueId;
@@ -29,7 +30,7 @@ export interface SessionRun {
 
 export function startRun(p: PreparedSession, now: number): SessionRun {
   return {
-    subjectId: p.target.subjectId, topicId: p.target.topicId, taskId: p.target.taskId,
+    subjectId: p.target.subjectId, topicId: p.target.topicId, taskId: p.target.taskId, taskKind: p.taskKind,
     blockStart: p.target.blockStart?.getTime(),
     technique: p.chosen.technique, recommended: p.recommendation.primary, choice: p.chosen.choice,
     steps: p.chosen.steps, index: 0, elapsed: p.chosen.steps.map(() => 0), runningSince: now, startedAt: now,
@@ -123,7 +124,7 @@ export async function finishRun(deps: Deps, run: SessionRun, assessment?: Assess
   const planned = plannedMin(run);
   const session: StudySession = {
     id: `${run.startedAt}-${run.subjectId}`,
-    subjectId: run.subjectId, topicId: run.topicId, taskId: run.taskId,
+    subjectId: run.subjectId, topicId: run.topicId, taskId: run.taskId, taskKind: run.taskKind,
     blockStart: run.blockStart !== undefined ? new Date(run.blockStart) : undefined,
     startedAt: new Date(run.startedAt), endedAt: nowDate,
     plannedMin: planned, actualMin, cycles: run.steps.filter((s) => s.kind === 'foco').length,

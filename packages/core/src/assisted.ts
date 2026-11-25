@@ -1,5 +1,5 @@
 import {
-  TECHNIQUE_BY_ID, buildSteps, compatibleTechniques, recommend,
+  TECHNIQUE_BY_ID, buildSteps, compatibleTechniques, outcomeOf, recommend, type OutcomeRecord,
   type Level, type PlanBlock, type Recommendation, type RecommendationContext, type SessionStep, type TaskKind, type TechniqueId, type Topic,
 } from '@estuda/engine';
 import type { ChoiceMode, Deps, Task } from './ports';
@@ -55,6 +55,7 @@ export async function prepareSession(deps: Deps, target: SessionTarget & { block
     difficulty: subject?.difficulty, mastery: topic ? MASTERY[topic.status] : undefined,
     availableMin: target.availableMin ?? target.blockDurationMin ?? profile.focusMin * 2,
     recentTechniques: recent,
+    history: sessions.flatMap((s): OutcomeRecord[] => (s.techniqueId && s.assessment ? [{ technique: s.techniqueId, taskKind: s.taskKind, outcome: outcomeOf(s.assessment), at: s.startedAt.getTime() }] : [])),
   };
   const recommendation = recommend(context);
   return {

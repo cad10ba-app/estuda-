@@ -23,6 +23,8 @@ export interface Profile {
   accessibility?: Accessibility;
   /** Data (YYYY-MM-DD, horário local) a partir da qual o plano é gerado. Padrão: hoje. */
   planStart?: string;
+  /** Retenção desejada nas revisões (0,80–0,95). Padrão 0,90. */
+  retention?: number;
 }
 
 export interface Subject {
