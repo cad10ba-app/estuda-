@@ -1,6 +1,6 @@
 import type { TaskKind, Topic } from '@estuda/engine';
 import type { Deps, Goal, GoalType, Task } from './ports';
-import { planWeek, startOfDayUTC } from './usecases';
+import { planWeek } from './usecases';
 
 const uid = (deps: Deps) => `${deps.clock.now().getTime()}-${Math.random().toString(36).slice(2, 7)}`;
 
@@ -101,4 +101,3 @@ export async function nextTask(deps: Deps, ref: { topicId?: string; subjectId?: 
   return tasks.find((t) => ref.topicId && t.topicId === ref.topicId) ?? tasks.find((t) => !t.topicId && ref.subjectId && t.subjectId === ref.subjectId);
 }
 
-export { startOfDayUTC };

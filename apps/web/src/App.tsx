@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Project, Subject } from '@estuda/engine';
-import { DEFAULT_ACCESSIBILITY, type SessionRun } from '@estuda/core';
+import { DEFAULT_ACCESSIBILITY, ensureFreshPlan, type SessionRun } from '@estuda/core';
 import { deps } from './store';
 import { displayName } from './names';
 import { Onboarding } from './Onboarding';
@@ -52,6 +52,7 @@ export function App() {
   useEffect(() => {
     (async () => {
       if (!(await deps.store.getProfile())) return setReady('onboarding');
+      await ensureFreshPlan(deps); // plano velho (só horários passados) é refeito ao abrir
       await refresh();
       setReady('app');
     })();

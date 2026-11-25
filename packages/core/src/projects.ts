@@ -3,10 +3,9 @@ import {
   type Milestone, type Project, type ProjectModel, type ProjectRisk, type ProjectUnit,
 } from '@estuda/engine';
 import type { Deps } from './ports';
-import { planWeek, startOfDayUTC } from './usecases';
+import { localDayKey, planWeek, startOfDay, tzOffset } from './usecases';
 
 const DAY_MS = 86_400_000;
-const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 
 export interface CreateProjectInput {
   model: ProjectModel;
@@ -24,7 +23,7 @@ export async function createProject(deps: Deps, input: CreateProjectInput) {
   if (!title) throw new Error('Título do projeto é obrigatório.');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(input.finalDate)) throw new Error('Data final inválida.');
   const finalDate = new Date(`${input.finalDate}T00:00:00Z`);
-  const startDate = startOfDayUTC(deps.clock.now());
+  const startDate = startOfDay(deps.clock.now(), tzOffset(deps));
   if (!(finalDate.getTime() - startDate.getTime() >= 7 * DAY_MS)) throw new Error('A data final deve estar a pelo menos 7 dias de hoje.');
   if (!(input.hoursPerWeek > 0 && input.hoursPerWeek <= 60)) throw new Error('Horas por semana deve estar entre 0 e 60.');
   const id = `${deps.clock.now().getTime()}-${Math.random().toString(36).slice(2, 6)}`;
@@ -57,7 +56,7 @@ export async function setMilestoneDone(deps: Deps, milestoneId: string, done: bo
 /** REQ-022: registra quantidade escrita no dia (soma com o registro existente do mesmo dia). */
 export async function logWriting(deps: Deps, input: { projectId: string; amount: number; date?: string }) {
   if (!(input.amount > 0)) throw new Error('Informe uma quantidade maior que zero.');
-  const date = input.date ?? isoDay(deps.clock.now());
+  const date = input.date ?? localDayKey(deps.clock.now(), tzOffset(deps));
   const id = `${input.projectId}-${date}`;
   const prev = (await deps.store.listWritingLogs()).find((l) => l.id === id);
   await deps.store.saveWritingLog({ id, projectId: input.projectId, date, amount: (prev?.amount ?? 0) + input.amount });
@@ -81,7 +80,7 @@ export async function projectStatus(deps: Deps, projectId: string): Promise<Proj
   const milestones = allMs.filter((m) => m.projectId === projectId).sort((a, b) => a.order - b.order);
   const mine = logs.filter((l) => l.projectId === projectId);
   const written = mine.reduce((a, l) => a + l.amount, 0);
-  const today = isoDay(now);
+  const today = localDayKey(now, tzOffset(deps));
   const writtenToday = mine.filter((l) => l.date === today).reduce((a, l) => a + l.amount, 0);
   // Meta de hoje = o que falta ÷ dias restantes, calculada sem contar o já escrito hoje.
   const goalToday = dailyGoal(project, written - writtenToday, now);
@@ -95,7 +94,7 @@ export async function projectStatus(deps: Deps, projectId: string): Promise<Proj
 /** Redistribui só os marcos ainda não concluídos entre hoje e o fim do trabalho útil (após atraso). */
 export async function rescheduleProject(deps: Deps, projectId: string) {
   const { project, milestones } = await projectStatus(deps, projectId);
-  const today = startOfDayUTC(deps.clock.now());
+  const today = startOfDay(deps.clock.now(), tzOffset(deps));
   const pending = milestones.filter((m) => !m.done);
   if (pending.length === 0) return;
   if (project.finalDate.getTime() - today.getTime() < DAY_MS) throw new Error('Prazo final já está encerrado ou é hoje.');

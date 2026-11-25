@@ -17,12 +17,13 @@ function overlaps(aStart: number, aDur: number, b: PlanBlock): boolean {
 }
 
 /** Todos os horários possíveis de início de bloco nos 7 dias, ignorando limites de carga. */
-export function windowSlots(weekStart: Date, profile: Profile, windows: AvailabilityWindow[]): Date[] {
+export function windowSlots(weekStart: Date, profile: Profile, windows: AvailabilityWindow[], tzOffsetMin = 0): Date[] {
   const step = profile.focusMin + profile.breakMin;
   const out: Date[] = [];
   for (let d = 0; d < 7; d++) {
     const day = new Date(weekStart.getTime() + d * DAY_MS);
-    const weekday = day.getUTCDay();
+    // Dia da semana no horário local: weekStart é a meia-noite local.
+    const weekday = new Date(day.getTime() + tzOffsetMin * MIN_MS).getUTCDay();
     for (const w of windows.filter((x) => x.weekday === weekday).sort((a, b) => a.startMin - b.startMin)) {
       for (let m = w.startMin; m + profile.focusMin <= w.endMin; m += step) {
         out.push(new Date(day.getTime() + m * MIN_MS));
@@ -39,7 +40,7 @@ function buildSlots(input: PlanInput): Slot[] {
   const used = new Map<number, number>();
   for (const b of locked) used.set(dayIdx(b.start.getTime()), (used.get(dayIdx(b.start.getTime())) ?? 0) + 1);
   const slots: Slot[] = [];
-  for (const start of windowSlots(weekStart, profile, windows)) {
+  for (const start of windowSlots(weekStart, profile, windows, input.tzOffsetMin ?? 0)) {
     const t = start.getTime();
     if (from && t < from.getTime()) continue;
     if (locked.some((b) => overlaps(t, profile.focusMin, b))) continue;

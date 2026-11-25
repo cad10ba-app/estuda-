@@ -38,3 +38,11 @@ export async function setAccessibility(deps: Deps, patch: Partial<Accessibility>
   await deps.store.saveProfile({ ...cur, accessibility: a });
   return a;
 }
+
+/** Define a data (YYYY-MM-DD, horário local) a partir da qual o plano é gerado. Vazio = hoje. */
+export async function setPlanStart(deps: Deps, date: string | undefined) {
+  if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('Data inválida.');
+  const cur = await getProfileOrThrow(deps);
+  await deps.store.saveProfile({ ...cur, planStart: date || undefined });
+  return planWeek(deps);
+}

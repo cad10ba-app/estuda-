@@ -1,6 +1,6 @@
 import { NEW_CARD, reviewCard, type ReviewGrade } from '@estuda/engine';
 import type { Card, Deps } from './ports';
-import { startOfDayUTC } from './usecases';
+import { startOfDay, tzOffset } from './usecases';
 
 const DAY_MS = 86_400_000;
 
@@ -29,7 +29,7 @@ export async function addCard(deps: Deps, input: { subjectId: string; front: str
  */
 export async function reviewQueue(deps: Deps): Promise<{ queue: Card[]; dueTotal: number; reviewedToday: number }> {
   const now = deps.clock.now();
-  const dayStart = startOfDayUTC(now).getTime();
+  const dayStart = startOfDay(now, tzOffset(deps)).getTime();
   const [cards, profile] = await Promise.all([deps.store.listCards(), deps.store.getProfile()]);
   const cap = profile?.reviewCap ?? 40;
   const reviewedToday = cards.filter((c) => c.lastReviewedAt && c.lastReviewedAt.getTime() >= dayStart).length;

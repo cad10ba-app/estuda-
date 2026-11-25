@@ -72,3 +72,10 @@ Horas: Mat ≈ 4,4 h (≈ 10 blocos), Qui ≈ 3,7 h (≈ 9), His ≈ 2,5 h (≈ 
 
 ## Testes
 Cobertura obrigatória: distribuição de horas, intercalação, respeito de janelas/limites, replanejamento, SM-2, marcos reversos. Implementar como módulo puro TypeScript (sem dependência de UI) com testes de propriedade.
+
+## Fuso horário e início do plano (atualização)
+- As janelas de disponibilidade ("noite 19h–22h") são **horário local** do usuário. O núcleo recebe o deslocamento do fuso por `Clock.offsetMin(at)` (minutos a leste do UTC; Brasil = −180) e o motor usa a **meia-noite local** como início de cada dia (`PlanInput.tzOffsetMin`). Internamente os instantes continuam em UTC.
+- O plano só gera blocos a partir de **agora** ou da **data de início** escolhida pelo usuário (`Profile.planStart`, onboarding e Perfil), nunca em horário que já passou.
+- Ao abrir o app, `ensureFreshPlan` refaz o plano se não houver bloco futuro ou se a cobertura futura for menor que 2 dias.
+- A "próxima sessão" exibida no Início é sempre o próximo bloco que ainda não começou, hoje ou nos dias seguintes.
+- Limitação: o deslocamento do fuso é fixo durante a geração do plano; em semanas com mudança de horário de verão, blocos próximos da virada podem ficar 1 h deslocados.

@@ -26,6 +26,7 @@ export function Home({ hasRun, onOpenSession, onOpenRun, onOpenReview }: {
   const [done, setDone] = useState<Map<string, number>>(new Map());
   const [due, setDue] = useState(0);
   const [next, setNext] = useState<PreparedSession | null>(null);
+  const [nextBlock, setNextBlock] = useState<PlanBlock | null>(null);
   const [pick, setPick] = useState('');
   const [msg, setMsg] = useState('');
 
@@ -40,8 +41,13 @@ export function Home({ hasRun, onOpenSession, onOpenRun, onOpenReview }: {
     setDue(q.queue.length + tr.length);
     setPick((cur) => cur || subs[0]?.id || '');
     const now = deps.clock.now();
-    const pending = day.filter((b) => !b.missed && !isBlockDone(b, d));
-    const nb = pending.find((b) => b.start >= now) ?? pending[0];
+    // Próxima sessão: o próximo bloco que ainda não começou (hoje ou nos dias seguintes). Nunca um horário que já passou.
+    const all = await deps.store.listPlan();
+    const upcoming = all
+      .filter((b) => !b.missed && b.start >= now && !isBlockDone(b, d))
+      .sort((a, b) => a.start.getTime() - b.start.getTime());
+    const nb = upcoming[0];
+    setNextBlock(nb ?? null);
     setNext(nb ? await prepareSession(deps, blockTarget(nb)) : null);
   }, []);
   useEffect(() => { void load(); }, [load]);
@@ -56,7 +62,10 @@ export function Home({ hasRun, onOpenSession, onOpenRun, onOpenReview }: {
     await load();
   };
 
-  const nb = next?.target.blockStart ? blocks.find((b) => b.start.getTime() === next.target.blockStart!.getTime()) : undefined;
+  const nb = nextBlock ?? undefined;
+  const when = nb
+    ? (nb.start.toDateString() === now.toDateString() ? '' : nb.start.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }) + ' · ') + hhmm(nb.start)
+    : '';
   const rec = next?.recommendation;
 
   return (
@@ -73,7 +82,7 @@ export function Home({ hasRun, onOpenSession, onOpenRun, onOpenReview }: {
 
       {next && rec && (
         <section className="card hero">
-          <p className="muted">Próxima sessão{nb ? ` · ${hhmm(nb.start)}` : ''}</p>
+          <p className="muted">Próxima sessão{when ? ` · ${when}` : ''}</p>
           <h2 className="hero-title">
             {name(next.target.subjectId)}{next.topic ? ` — ${next.topic.title}` : ''}
           </h2>
@@ -88,8 +97,8 @@ export function Home({ hasRun, onOpenSession, onOpenRun, onOpenReview }: {
 
       {!next && (
         <section className="card">
-          <p><strong>Nenhum bloco pendente hoje.</strong></p>
-          <p className="muted">Quer estudar mesmo assim? Escolha uma disciplina.</p>
+          <p><strong>Nenhuma sessão futura no plano.</strong></p>
+          <p className="muted">Confira os horários de estudo em Perfil ou comece uma sessão livre agora.</p>
           <div className="row">
             <select value={pick} onChange={(e) => setPick(e.target.value)}>
               {subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}

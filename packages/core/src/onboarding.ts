@@ -39,6 +39,8 @@ export const DEFAULT_AUTONOMY: Record<Level, Autonomy> = { fund2: 'guiada', medi
 export interface OnboardingInput {
   level: Level;
   autonomy?: Autonomy;
+  /** Data de início do plano (YYYY-MM-DD, horário local). Padrão: hoje. */
+  planStart?: string;
   /** Objetivo principal (opcional: dá para começar com poucos dados). */
   goal?: { type: GoalType; title: string; deadline?: string };
   subjectNames: string[];
@@ -61,7 +63,7 @@ export async function completeOnboarding(deps: Deps, input: OnboardingInput) {
   if (input.weekdays.length === 0 || input.periods.length === 0) {
     throw new Error('Informe ao menos um dia e um período de estudo.');
   }
-  await deps.store.saveProfile({ ...DEFAULT_PROFILES[input.level], autonomy: input.autonomy ?? DEFAULT_AUTONOMY[input.level] });
+  await deps.store.saveProfile({ ...DEFAULT_PROFILES[input.level], autonomy: input.autonomy ?? DEFAULT_AUTONOMY[input.level], planStart: input.planStart || undefined });
   const taken = new Set<string>();
   for (const name of names) {
     const subject: Subject = { id: slugId(name, taken), name, weight: 3, difficulty: 3 };
