@@ -3,10 +3,11 @@ import type { Deps } from './ports';
 import { planWeek } from './usecases';
 
 export const LEVEL_LABEL: Record<Level, string> = {
-  fund2: 'Ensino Fundamental II (6º–9º ano)',
+  fund2: 'Ensino Fundamental (anos finais)',
   medio: 'Ensino Médio',
   superior: 'Ensino Superior',
-  pos: 'Pós-graduação',
+  pos: 'Pesquisa (TCC, especialização, mestrado, doutorado)',
+  livre: 'Objetivo livre (concursos, idiomas, certificações)',
 };
 
 /** Disciplinas sugeridas por nível (ponto de partida editável). */
@@ -15,6 +16,7 @@ export const SUGGESTED_SUBJECTS: Record<Level, string[]> = {
   medio: ['Matemática', 'Português', 'Redação', 'Física', 'Química', 'Biologia', 'História', 'Geografia'],
   superior: [],
   pos: [],
+  livre: [],
 };
 
 export type Period = 'manha' | 'tarde' | 'noite';

@@ -1,4 +1,14 @@
-export type Level = 'fund2' | 'medio' | 'superior' | 'pos';
+/** Modo de uso. fund2 = Fundamental (anos finais); pos = Pesquisa (TCC a doutorado); livre = Objetivo livre. */
+export type Level = 'fund2' | 'medio' | 'superior' | 'pos' | 'livre';
+
+export type Autonomy = 'guiada' | 'media' | 'alta';
+
+export interface Accessibility {
+  /** Escala de fonte: 1, 1.15 ou 1.3. */
+  fontScale: number;
+  highContrast: boolean;
+  reduceMotion: boolean;
+}
 
 export interface Profile {
   level: Level;
@@ -8,6 +18,9 @@ export interface Profile {
   dailyLoadMin: number;
   /** Teto diário de revisões. */
   reviewCap: number;
+  /** Nível de autonomia do estudante (doc 12 §3). */
+  autonomy?: Autonomy;
+  accessibility?: Accessibility;
 }
 
 export interface Subject {
