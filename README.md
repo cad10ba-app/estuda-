@@ -23,5 +23,5 @@ App que organiza o estudo de alunos do **Ensino Fundamental II (anos finais), En
 
 ## Convenções
 - Idioma: pt-BR. IDs rastreáveis: `TEC-xx` (técnica), `REQ-xxx` (requisito), `EPIC-x` (épico), `ENT-xx` (entidade).
-- Status: documentação de planejamento + MVP local funcional (`packages/engine`, `packages/core`, `packages/data`, `apps/web`).
+- Status: estrutura do doc 12 aplicada (recomendação assistida, sessão em etapas, hierarquia de conteúdo) + MVP local funcional (`packages/engine`, `packages/core`, `packages/data`, `apps/web`).
 - Rodar: `npm install` e `npm run dev`. Testes: `npm test`. Build: `npm run build`.

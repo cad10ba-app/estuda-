@@ -17,3 +17,4 @@ export * from './privacy';
 export * from './content';
 export * from './assisted';
 export * from './runner';
+export * from './profile';

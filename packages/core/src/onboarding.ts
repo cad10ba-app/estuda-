@@ -1,6 +1,7 @@
-import { DEFAULT_PROFILES, type AvailabilityWindow, type Level, type Subject } from '@estuda/engine';
-import type { Deps } from './ports';
+import { DEFAULT_PROFILES, type Autonomy, type AvailabilityWindow, type Level, type Subject } from '@estuda/engine';
+import type { Deps, GoalType } from './ports';
 import { planWeek } from './usecases';
+import { addGoal, attachSubjectToGoal } from './content';
 
 export const LEVEL_LABEL: Record<Level, string> = {
   fund2: 'Ensino Fundamental (anos finais)',
@@ -33,8 +34,13 @@ export function buildWindows(weekdays: number[], periods: Period[]): Availabilit
   );
 }
 
+export const DEFAULT_AUTONOMY: Record<Level, Autonomy> = { fund2: 'guiada', medio: 'media', superior: 'alta', pos: 'alta', livre: 'media' };
+
 export interface OnboardingInput {
   level: Level;
+  autonomy?: Autonomy;
+  /** Objetivo principal (opcional: dá para começar com poucos dados). */
+  goal?: { type: GoalType; title: string; deadline?: string };
   subjectNames: string[];
   weekdays: number[];
   periods: Period[];
@@ -55,12 +61,16 @@ export async function completeOnboarding(deps: Deps, input: OnboardingInput) {
   if (input.weekdays.length === 0 || input.periods.length === 0) {
     throw new Error('Informe ao menos um dia e um período de estudo.');
   }
-  await deps.store.saveProfile(DEFAULT_PROFILES[input.level]);
+  await deps.store.saveProfile({ ...DEFAULT_PROFILES[input.level], autonomy: input.autonomy ?? DEFAULT_AUTONOMY[input.level] });
   const taken = new Set<string>();
   for (const name of names) {
     const subject: Subject = { id: slugId(name, taken), name, weight: 3, difficulty: 3 };
     await deps.store.saveSubject(subject);
   }
   await deps.store.saveWindows(buildWindows(input.weekdays, input.periods));
+  if (input.goal && input.goal.title.trim()) {
+    const goal = await addGoal(deps, input.goal);
+    for (const sub of await deps.store.listSubjects()) await attachSubjectToGoal(deps, sub.id, goal.id);
+  }
   return planWeek(deps);
 }

@@ -124,3 +124,51 @@ export async function applyRetrospective(deps: Deps, a: RetrospectiveAnswers): P
   if (changes.length === 0) changes.push('Nenhum ajuste necessário; plano mantido.');
   return changes;
 }
+
+export interface LearningSummary {
+  /** Atividade: o estudante realizou sessões. */
+  activity: { sessions: number; minutes: number };
+  /** Desempenho: acertos em perguntas/exercícios (null sem dados). */
+  performance: { answered: number; accuracy: number | null };
+  /** Percepção: confiança e dificuldade autodeclaradas (null sem dados). */
+  perception: { rated: number; confidence: number | null; difficulty: number | null };
+  /** Progresso: tarefas, tópicos e marcos concluídos. */
+  progress: { tasksDone: number; tasksTotal: number; topicsSeen: number; topicsTotal: number; milestonesDone: number; milestonesTotal: number };
+  /** Como o estudante usou as recomendações (doc 12 §14). */
+  recommendations: { recomendada: number; trocada: number; personalizada: number };
+  /** Revisões feitas (cartões revisados e revisões de tópicos concluídas) e pendentes. */
+  reviews: { pending: number };
+}
+
+/** Doc 12 §5.8: separa atividade, desempenho, percepção e progresso. Janela: últimos 7 dias para sessões. */
+export async function learningSummary(deps: Deps): Promise<LearningSummary> {
+  const now = deps.clock.now();
+  const from = startOfDayUTC(now).getTime() - 6 * DAY_MS;
+  const [sessions, tasks, topics, milestones, reviews, cards] = await Promise.all([
+    deps.store.listSessions(), deps.store.listTasks(), deps.store.listTopics(), deps.store.listMilestones(),
+    deps.store.listTopicReviews(), deps.store.listCards(),
+  ]);
+  const win = sessions.filter((s) => s.startedAt.getTime() >= from);
+  const rated = win.filter((s) => s.assessment);
+  const scored = rated.filter((s) => s.assessment!.total && s.assessment!.correct !== undefined);
+  const totalQ = scored.reduce((a, s) => a + s.assessment!.total!, 0);
+  const rightQ = scored.reduce((a, s) => a + s.assessment!.correct!, 0);
+  const avg = (f: (s: (typeof rated)[number]) => number) => rated.length ? rated.reduce((a, s) => a + f(s), 0) / rated.length : null;
+  const real = topics.filter((t) => t.kind !== 'unidade');
+  const choice = (c: 'recomendada' | 'trocada' | 'personalizada') => win.filter((s) => s.choice === c).length;
+  const nowMs = now.getTime();
+  return {
+    activity: { sessions: win.length, minutes: win.reduce((a, s) => a + s.actualMin, 0) },
+    performance: { answered: totalQ, accuracy: totalQ > 0 ? rightQ / totalQ : null },
+    perception: { rated: rated.length, confidence: avg((s) => s.assessment!.confidence), difficulty: avg((s) => s.assessment!.difficulty) },
+    progress: {
+      tasksDone: tasks.filter((t) => t.done).length, tasksTotal: tasks.length,
+      topicsSeen: real.filter((t) => t.status !== 'nao_visto').length, topicsTotal: real.length,
+      milestonesDone: milestones.filter((m) => m.done).length, milestonesTotal: milestones.length,
+    },
+    recommendations: { recomendada: choice('recomendada'), trocada: choice('trocada'), personalizada: choice('personalizada') },
+    reviews: {
+      pending: reviews.filter((r) => !r.done && r.due.getTime() <= nowMs).length + cards.filter((c) => c.due.getTime() <= nowMs).length,
+    },
+  };
+}

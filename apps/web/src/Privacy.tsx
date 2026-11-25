@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { DELETE_CONFIRMATION, deleteAllData, exportDataJSON } from '@estuda/core';
 import { deps } from './store';
-import { saveActive } from './Focus';
+import { saveRun } from './SessionRun';
 
-export function Privacy() {
+export function Privacy({ embedded }: { embedded?: boolean }) {
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
@@ -20,16 +20,17 @@ export function Privacy() {
   const wipe = async () => {
     try {
       await deleteAllData(deps, confirm);
-      saveActive(null);
+      saveRun(null);
       location.reload();
     } catch (e) {
       setError((e as Error).message);
     }
   };
 
+  const Wrap = embedded ? 'section' : 'main';
   return (
-    <main className="app">
-      <h1>Privacidade e dados</h1>
+    <Wrap className={embedded ? undefined : 'app'}>
+      {embedded ? <h2>Privacidade e dados</h2> : <h1>Privacidade e dados</h1>}
       <p className="muted">Seus dados ficam somente neste aparelho. Nada é enviado a servidores.</p>
 
       <section className="card">
@@ -46,6 +47,6 @@ export function Privacy() {
         {error && <p className="warn">{error}</p>}
         <button className="danger-btn" disabled={confirm.trim() !== DELETE_CONFIRMATION} onClick={wipe}>Excluir tudo</button>
       </section>
-    </main>
+    </Wrap>
   );
 }

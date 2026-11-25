@@ -75,3 +75,31 @@ h3 { font-size: 14px; margin: 16px 0 6px; color: var(--muted); }
 button.danger { color: #dc2626; }
 button.danger-btn { background: #dc2626; width: 100%; margin-top: 8px; }
 .card input { width: 100%; margin-top: 8px; }
+
+/* ---- Estrutura ESTUDA (doc 12) ---- */
+.app { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+.actions { display: none; }
+.tabs { padding-top: 4px; }
+.tabs button { flex: 1; display: grid; justify-items: center; gap: 0; min-height: 52px; font-size: 11px; line-height: 1.2; padding: 2px 0; }
+.tabs button span:first-child { font-size: 18px; }
+.seg { display: flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 8px 0 12px; }
+.seg button { border-radius: 0; background: transparent; color: var(--fg); }
+.seg button.on { background: var(--accent); color: #fff; }
+.hero { display: grid; gap: 6px; }
+.hero-title { font-size: 20px; margin: 0; color: var(--fg); text-transform: none; }
+.why { margin: 4px 0; padding: 8px 10px; background: color-mix(in srgb, var(--accent) 12%, transparent); border-radius: 8px; }
+.why-list { margin: 4px 0; padding-left: 20px; }
+.steps { padding-left: 20px; display: grid; gap: 8px; }
+.scale { display: flex; gap: 8px; }
+.scale .chip { flex: 1; min-height: 44px; justify-content: center; }
+.stack.full { width: 100%; }
+.badge { font-size: 11px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); }
+.detail { display: grid; gap: 2px; font-size: 14px; }
+.detail p { margin: 4px 0; }
+.unit { border-left: 3px solid var(--accent); padding-left: 8px; margin: 8px 0; }
+.topic-block { margin: 8px 0; }
+.tasks { margin: 4px 0 4px 8px; }
+.card select, .card input[type=date], .card input:not([type=checkbox]):not([type=range]) { margin-top: 4px; }
+html[data-contrast='high'] { --fg: #000; --bg: #fff; --card: #fff; --border: #000; --muted: #222; --accent: #1d1d9b; }
+@media (prefers-color-scheme: dark) { html[data-contrast='high'] { --fg: #fff; --bg: #000; --card: #000; --border: #fff; --muted: #ddd; --accent: #aab4ff; } }
+html[data-motion='reduce'] *, html[data-motion='reduce'] *::before { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
