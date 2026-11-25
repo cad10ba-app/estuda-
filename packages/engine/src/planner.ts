@@ -114,7 +114,7 @@ function blockType(daysLeft: number | null, indexInSubject: number): BlockType {
  * Revisão/simulado: tópicos já vistos (estudando/dominado). Gira por `n` para variar.
  */
 export function pickTopic(topics: Topic[], type: BlockType, n: number): Topic | undefined {
-  const sorted = [...topics].sort((a, b) => a.order - b.order);
+  const sorted = topics.filter((t) => t.kind !== 'unidade').sort((a, b) => a.order - b.order);
   const pool =
     type === 'estudo'
       ? [...sorted.filter((t) => t.status === 'estudando'), ...sorted.filter((t) => t.status === 'nao_visto')]

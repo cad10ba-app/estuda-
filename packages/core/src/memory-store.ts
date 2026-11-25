@@ -1,5 +1,5 @@
 import type { AvailabilityWindow, Deadline, PlanBlock, Profile, Subject, Topic, Milestone, Project } from '@estuda/engine';
-import type { Card, Reference, StudySession, StudyStore, TopicReview, WritingLog } from './ports';
+import type { Card, Goal, Reference, Task, StudySession, StudyStore, TopicReview, WritingLog } from './ports';
 
 /** Implementação em memória: testes e demos. */
 export class MemoryStore implements StudyStore {
@@ -15,6 +15,8 @@ export class MemoryStore implements StudyStore {
   private milestones = new Map<string, Milestone>();
   private logs = new Map<string, WritingLog>();
   private refs = new Map<string, Reference>();
+  private goals = new Map<string, Goal>();
+  private tasks = new Map<string, Task>();
   private reviews = new Map<string, TopicReview>();
 
   async getProfile() { return this.profile; }
@@ -56,8 +58,14 @@ export class MemoryStore implements StudyStore {
     this.profile = undefined;
     this.subjects.clear(); this.deadlines.clear(); this.windows = []; this.plan = []; this.sessions = [];
     this.cards.clear(); this.topics.clear(); this.reviews.clear();
-    this.projects.clear(); this.milestones.clear(); this.logs.clear(); this.refs.clear();
+    this.goals.clear(); this.tasks.clear(); this.projects.clear(); this.milestones.clear(); this.logs.clear(); this.refs.clear();
   }
+  async listGoals() { return [...this.goals.values()]; }
+  async saveGoal(g: Goal) { this.goals.set(g.id, g); }
+  async deleteGoal(id: string) { this.goals.delete(id); }
+  async listTasks() { return [...this.tasks.values()]; }
+  async saveTask(t: Task) { this.tasks.set(t.id, t); }
+  async deleteTask(id: string) { this.tasks.delete(id); }
   async listPlan() { return [...this.plan]; }
   async savePlan(b: PlanBlock[]) { this.plan = [...b]; }
 }

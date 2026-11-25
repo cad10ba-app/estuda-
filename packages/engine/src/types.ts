@@ -32,6 +32,8 @@ export interface Subject {
   difficulty: number;
   /** Fração (0–1) de tópicos ainda não vistos. */
   unseenRatio?: number;
+  /** Objetivo ao qual a disciplina pertence (doc 12 §5.2). */
+  goalId?: string;
 }
 
 export type TopicStatus = 'nao_visto' | 'estudando' | 'dominado';
@@ -42,6 +44,10 @@ export interface Topic {
   title: string;
   order: number;
   status: TopicStatus;
+  /** 'unidade' agrupa tópicos (não entra no plano); padrão 'topico'. */
+  kind?: 'unidade' | 'topico';
+  /** Unidade à qual o tópico pertence. */
+  parentId?: string;
 }
 
 export type DeadlineKind = 'prova' | 'entrega' | 'simulado' | 'marco';

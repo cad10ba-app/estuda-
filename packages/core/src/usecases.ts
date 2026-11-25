@@ -32,7 +32,7 @@ export async function planWeek(deps: Deps): Promise<PlanResult> {
     .filter((p) => p.finalDate > now && milestones.some((m) => m.projectId === p.id && !m.done && m.effortShare > 0))
     .map((p) => ({ id: p.id, blocks: Math.max(1, Math.round((p.hoursPerWeek * 60) / profile.focusMin)) }));
   const subjects = rawSubjects.map((s) => {
-    const ts = topics.filter((t) => t.subjectId === s.id);
+    const ts = topics.filter((t) => t.subjectId === s.id && t.kind !== 'unidade');
     return ts.length ? { ...s, unseenRatio: ts.filter((t) => t.status === 'nao_visto').length / ts.length } : s;
   });
   const horizon = weekStart.getTime() + 7 * DAY_MS;

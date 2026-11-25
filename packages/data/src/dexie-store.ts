@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type { AvailabilityWindow, Deadline, PlanBlock, Profile, Subject, Topic, Milestone, Project } from '@estuda/engine';
-import type { Card, Reference, StudySession, StudyStore, TopicReview, WritingLog } from '@estuda/core';
+import type { Card, Goal, Reference, Task, StudySession, StudyStore, TopicReview, WritingLog } from '@estuda/core';
 
 interface Row<T> { id: string; value: T }
 
@@ -17,6 +17,8 @@ export class DexieStore extends Dexie implements StudyStore {
   private milestones!: EntityTable<Milestone, 'id'>;
   private writingLogs!: EntityTable<WritingLog, 'id'>;
   private refs!: EntityTable<Reference, 'id'>;
+  private goals!: EntityTable<Goal, 'id'>;
+  private tasks!: EntityTable<Task, 'id'>;
   private plan!: EntityTable<PlanBlock & { id: number }, 'id'>;
 
   constructor(name = 'estuda') {
@@ -65,6 +67,22 @@ export class DexieStore extends Dexie implements StudyStore {
       milestones: 'id, projectId',
       writingLogs: 'id, projectId',
       refs: 'id, projectId',
+    });
+    this.version(6).stores({
+      kv: 'id',
+      subjects: 'id',
+      deadlines: 'id, subjectId',
+      plan: '++id, start',
+      sessions: 'id, startedAt',
+      cards: 'id, subjectId, due',
+      topics: 'id, subjectId',
+      topicReviews: 'id, topicId, due',
+      projects: 'id',
+      milestones: 'id, projectId',
+      writingLogs: 'id, projectId',
+      refs: 'id, projectId',
+      goals: 'id',
+      tasks: 'id, topicId, subjectId',
     });
   }
 
@@ -120,6 +138,12 @@ export class DexieStore extends Dexie implements StudyStore {
       await Promise.all(this.tables.map((t) => t.clear()));
     });
   }
+  listGoals() { return this.goals.toArray(); }
+  async saveGoal(g: Goal) { await this.goals.put(g); }
+  deleteGoal(id: string) { return this.goals.delete(id); }
+  listTasks() { return this.tasks.toArray(); }
+  async saveTask(t: Task) { await this.tasks.put(t); }
+  deleteTask(id: string) { return this.tasks.delete(id); }
   async listPlan() {
     return (await this.plan.orderBy('start').toArray()).map(({ id: _id, ...b }) => b as PlanBlock);
   }

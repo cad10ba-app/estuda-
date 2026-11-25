@@ -1,7 +1,48 @@
-import type { AvailabilityWindow, Deadline, Milestone, PlanBlock, Profile, Project, Subject, Topic } from '@estuda/engine';
+import type { AvailabilityWindow, Deadline, Milestone, TaskKind, TechniqueId, PlanBlock, Profile, Project, Subject, Topic } from '@estuda/engine';
+
+export type GoalType = 'rotina' | 'prova' | 'concurso' | 'idioma' | 'disciplina' | 'projeto' | 'outro';
+
+/** Objetivo do estudante (doc 12 §5.2): topo da hierarquia. */
+export interface Goal {
+  id: string;
+  type: GoalType;
+  title: string;
+  /** Prazo (UTC 00:00), opcional. */
+  deadline?: Date;
+}
+
+/** Tarefa dentro de um tópico ou etapa de projeto. */
+export interface Task {
+  id: string;
+  subjectId?: string;
+  topicId?: string;
+  milestoneId?: string;
+  title: string;
+  kind: TaskKind;
+  estimatedMin: number;
+  done: boolean;
+}
+
+export type ChoiceMode = 'recomendada' | 'trocada' | 'personalizada';
+
+/** Avaliação pós-sessão (doc 12 §5.8): percepção e desempenho separados. */
+export interface Assessment {
+  /** Dificuldade percebida 1–5. */
+  difficulty: number;
+  /** Confiança 1–5. */
+  confidence: number;
+  /** Desempenho opcional em perguntas/exercícios. */
+  correct?: number;
+  total?: number;
+}
 
 /** Sessão de estudo realizada (REQ-010: tempo real vs planejado). */
 export interface StudySession {
+  taskId?: string;
+  techniqueId?: TechniqueId;
+  recommendedTechniqueId?: TechniqueId;
+  choice?: ChoiceMode;
+  assessment?: Assessment;
   id: string;
   subjectId: string;
   topicId?: string;
@@ -108,6 +149,12 @@ export interface StudyStore {
   deleteReference(id: string): Promise<void>;
   /** Apaga TODOS os dados do usuário (LGPD, REQ-032). */
   clearAll(): Promise<void>;
+  listGoals(): Promise<Goal[]>;
+  saveGoal(goal: Goal): Promise<void>;
+  deleteGoal(id: string): Promise<void>;
+  listTasks(): Promise<Task[]>;
+  saveTask(task: Task): Promise<void>;
+  deleteTask(id: string): Promise<void>;
   listPlan(): Promise<PlanBlock[]>;
   savePlan(blocks: PlanBlock[]): Promise<void>;
 }
