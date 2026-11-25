@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { TECHNIQUE_BY_ID, type SessionStep } from '@estuda/engine';
+import { STRENGTH_LABEL, TECHNIQUE_BY_ID, type SessionStep } from '@estuda/engine';
 import { customizeSteps, prepareSession, startRun, swapTechnique, type PreparedSession, type SessionRun } from '@estuda/core';
 import { deps } from './store';
 import type { Target } from './types';
@@ -45,6 +45,13 @@ export function SessionSetup({ target, subjectName, onStart, onBack }: {
           <>
             <strong>Por que esta sugestão?</strong>
             <ul className="why-list">{rec.justification.map((j) => <li key={j}>{j}</li>)}</ul>
+            <details className="evidence">
+              <summary>Base científica</summary>
+              {rec.evidence.map((e) => (
+                <p key={e.technique}><span className={`ev ev-${e.strength}`}>{STRENGTH_LABEL[e.strength]}</span> <strong>{TECHNIQUE_BY_ID[e.technique].name}:</strong> {e.summary}</p>
+              ))}
+              <p className="muted">Fontes completas em Técnicas. Referências ainda em revisão por especialista.</p>
+            </details>
           </>
         )}
         {chosen.choice !== 'recomendada' && (

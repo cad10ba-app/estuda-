@@ -39,6 +39,7 @@ export interface Assessment {
 /** Sessão de estudo realizada (REQ-010: tempo real vs planejado). */
 export interface StudySession {
   taskId?: string;
+  taskKind?: TaskKind;
   techniqueId?: TechniqueId;
   recommendedTechniqueId?: TechniqueId;
   choice?: ChoiceMode;
@@ -64,6 +65,9 @@ export interface Card {
   intervalDays: number;
   ease: number;
   repetitions: number;
+  /** Estado FSRS (estabilidade em dias e dificuldade 1–10). Ausente em cartões criados antes do FSRS. */
+  stability?: number;
+  difficulty?: number;
   /** Próxima revisão. */
   due: Date;
   lastReviewedAt?: Date;

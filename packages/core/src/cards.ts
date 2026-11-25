@@ -1,4 +1,4 @@
-import { NEW_CARD, reviewCard, type ReviewGrade } from '@estuda/engine';
+import { NEW_CARD, firstReview, fromLegacy, nextIntervalDays, reviewFsrs, type FsrsGrade, type ReviewGrade } from '@estuda/engine';
 import type { Card, Deps } from './ports';
 import { startOfDay, tzOffset } from './usecases';
 
@@ -37,19 +37,36 @@ export async function reviewQueue(deps: Deps): Promise<{ queue: Card[]; dueTotal
   return { queue: due.slice(0, Math.max(0, cap - reviewedToday)), dueTotal: due.length, reviewedToday };
 }
 
-/** Aplica o resultado da revisão (SM-2) e agenda a próxima. */
+const GRADE: Record<ReviewGrade, FsrsGrade> = { errou: 1, dificil: 2, bom: 3, facil: 4 };
+
+/** Aplica o resultado da revisão (FSRS-4.5) e agenda a próxima para a retenção desejada do perfil. */
 export async function gradeCard(deps: Deps, cardId: string, grade: ReviewGrade): Promise<Card> {
-  const cards = await deps.store.listCards();
+  const [cards, profile] = await Promise.all([deps.store.listCards(), deps.store.getProfile()]);
   const card = cards.find((c) => c.id === cardId);
   if (!card) throw new Error('Cartão não encontrado.');
   const now = deps.clock.now();
-  const next = reviewCard({ intervalDays: card.intervalDays, ease: card.ease, repetitions: card.repetitions }, grade);
+  const t = now.getTime();
+  const retention = profile?.retention ?? 0.9;
+  const g = GRADE[grade];
+  let state;
+  if (card.stability !== undefined && card.difficulty !== undefined && card.lastReviewedAt) {
+    state = reviewFsrs({ stability: card.stability, difficulty: card.difficulty, lastReview: card.lastReviewedAt.getTime(), reps: card.repetitions, lapses: card.lapses }, g, t);
+  } else if (card.repetitions > 0 && card.lastReviewedAt) {
+    // Cartão antigo (SM-2): converte o intervalo atual em estabilidade e segue com FSRS.
+    state = reviewFsrs(fromLegacy(card.intervalDays, card.repetitions, card.lastReviewedAt.getTime()), g, t);
+  } else {
+    state = firstReview(g, t);
+  }
+  const interval = nextIntervalDays(state.stability, retention);
   const updated: Card = {
     ...card,
-    ...next,
-    due: new Date(now.getTime() + next.intervalDays * DAY_MS),
+    stability: state.stability,
+    difficulty: state.difficulty,
+    repetitions: g === 1 ? 0 : state.reps,
+    intervalDays: interval,
+    due: new Date(t + interval * DAY_MS),
     lastReviewedAt: now,
-    lapses: card.lapses + (grade === 'errou' ? 1 : 0),
+    lapses: state.lapses,
   };
   await deps.store.saveCard(updated);
   return updated;

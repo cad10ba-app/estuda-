@@ -46,3 +46,10 @@ export async function setPlanStart(deps: Deps, date: string | undefined) {
   await deps.store.saveProfile({ ...cur, planStart: date || undefined });
   return planWeek(deps);
 }
+
+/** Retenção desejada nas revisões: 80% a 95% (mais alta = revisões mais frequentes). */
+export async function setRetention(deps: Deps, retention: number) {
+  if (!(retention >= 0.8 && retention <= 0.95)) throw new Error('A retenção deve ficar entre 80% e 95%.');
+  const cur = await getProfileOrThrow(deps);
+  await deps.store.saveProfile({ ...cur, retention: Math.round(retention * 100) / 100 });
+}

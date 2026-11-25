@@ -150,3 +150,33 @@ describe('executor em etapas', () => {
     expect(out.data.tasks.length).toBeGreaterThan(0);
   });
 });
+
+describe('personalização com histórico real', () => {
+  it('sessões avaliadas alimentam a recomendação; técnica com melhor resultado passa a principal', async () => {
+    const { deps } = await base();
+    const mkSession = (i: number, technique: 'recuperacao_ativa' | 'repeticao_espacada', confidence: number) => deps.store.saveSession({
+      id: `s${i}-${technique}`, subjectId: 'matematica', startedAt: new Date(1_000_000 + i), endedAt: new Date(1_000_000 + i + 1), plannedMin: 25, actualMin: 25, cycles: 1,
+      techniqueId: technique, taskKind: 'memorizar', choice: 'recomendada', assessment: { difficulty: 3, confidence },
+    });
+    for (let i = 0; i < 4; i++) await mkSession(i, 'recuperacao_ativa', 1);
+    for (let i = 4; i < 8; i++) await mkSession(i, 'repeticao_espacada', 5);
+    const t = await addTopic(deps, { subjectId: 'matematica', title: 'T' });
+    await addTask(deps, { topicId: t.id, subjectId: 'matematica', title: 'x', kind: 'memorizar' });
+    const p = await prepareSession(deps, { subjectId: 'matematica', topicId: t.id, blockDurationMin: 40 });
+    expect(p.recommendation.personalized).toBe(true);
+    expect(p.recommendation.primary).toBe('repeticao_espacada');
+    expect(p.recommendation.evidence.length).toBeGreaterThan(0);
+  });
+
+  it('o executor grava o tipo de tarefa para comparar técnicas dentro do mesmo contexto', async () => {
+    const { deps, clock } = await base();
+    const t = await addTopic(deps, { subjectId: 'matematica', title: 'T' });
+    await addTask(deps, { topicId: t.id, subjectId: 'matematica', title: 'x', kind: 'resolver' });
+    const p = await prepareSession(deps, { subjectId: 'matematica', topicId: t.id, blockDurationMin: 25 });
+    let r = startRun(p, clock.t);
+    clock.t += 25 * MIN;
+    for (let i = 0; i < r.steps.length; i++) r = nextStep(r, clock.t);
+    const res = await finishRun(deps, r, { difficulty: 3, confidence: 4 });
+    expect(res.session?.taskKind).toBe('resolver');
+  });
+});

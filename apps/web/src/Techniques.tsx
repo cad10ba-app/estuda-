@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TECHNIQUES, type Technique } from '@estuda/engine';
+import { EVIDENCE, STRENGTH_LABEL, TECHNIQUES, sourcesFor, type Technique } from '@estuda/engine';
 
 const MODE_LABEL = { fund2: 'Fundamental', medio: 'Médio', superior: 'Superior', pos: 'Pesquisa', livre: 'Objetivo livre' } as const;
 
@@ -12,6 +12,7 @@ export function Techniques() {
       <button className="link title" onClick={() => setOpen(open === t.id ? null : t.id)}>
         <strong>{t.name}</strong> {!t.mvp && <span className="badge">em breve</span>} <span className="muted">{open === t.id ? '▲' : '▼'}</span>
       </button>
+      <p><span className={`ev ev-${EVIDENCE[t.id].strength}`}>{STRENGTH_LABEL[EVIDENCE[t.id].strength]}</span></p>
       <p className="muted">{t.description}</p>
       {open === t.id && (
         <div className="detail">
@@ -26,6 +27,17 @@ export function Techniques() {
           <p><strong>Alternativa acessível:</strong> {t.accessible}</p>
           {t.review && <p><strong>Revisão:</strong> {t.review}</p>}
           <p className="muted"><strong>Limites:</strong> {t.limits}</p>
+          <div className="evidence">
+            <p><strong>O que a pesquisa indica:</strong> {EVIDENCE[t.id].summary}</p>
+            <p><strong>Cuidados:</strong> {EVIDENCE[t.id].caveat}</p>
+            {sourcesFor(t.id).length > 0 && (
+              <>
+                <p><strong>Fontes:</strong></p>
+                <ul>{sourcesFor(t.id).map((src) => <li key={src.id}>{src.citation}</li>)}</ul>
+              </>
+            )}
+            <p className="muted">Referências reunidas pelo app e ainda em revisão por especialista. Evidência não é garantia de resultado individual.</p>
+          </div>
         </div>
       )}
     </li>
