@@ -17,7 +17,9 @@ App que organiza o estudo de alunos do **Ensino Fundamental II (anos finais), En
 | 08 | [UX mobile-first](docs/08-ux-mobile-first.md) | Navegação, telas, gamificação, acessibilidade |
 | 09 | [Roadmap e MVP](docs/09-roadmap-mvp.md) | Épicos `EPIC-x`, fases, backlog |
 | 10 | [Riscos e perguntas abertas](docs/10-riscos-e-perguntas-abertas.md) | Decisões pendentes |
+| 11 | [Deploy do PWA](docs/11-deploy.md) | Publicação no GitHub Pages e instalação no celular |
 
 ## Convenções
 - Idioma: pt-BR. IDs rastreáveis: `TEC-xx` (técnica), `REQ-xxx` (requisito), `EPIC-x` (épico), `ENT-xx` (entidade).
-- Status: documentação de planejamento; nenhum código ainda.
+- Status: documentação de planejamento + MVP local funcional (`packages/engine`, `packages/core`, `packages/data`, `apps/web`).
+- Rodar: `npm install` e `npm run dev`. Testes: `npm test`. Build: `npm run build`.
